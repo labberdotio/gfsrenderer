@@ -1,0 +1,64 @@
+query dnsmasq2 {
+  DNSMasqServices(
+    name: "dnsmasq2"
+  ) {
+    name,
+    description,
+    deployed {
+      name,
+      address
+    },
+    hosts {
+      name,
+      description,
+      members {
+        name,
+        description,
+        interfaces {
+          name,
+          hwaddr,
+          addresses {
+            id,
+            name,
+            address
+          }
+        },
+        interface {
+          name,
+          hwaddr,
+          addresses {
+            name,
+            address
+          }
+        }
+      }
+    },
+    aliases {
+      name,
+      description,
+      members {
+        name,
+        host {
+          name,
+          description,
+          interfaces {
+            name,
+            hwaddr,
+            addresses {
+              name,
+              address
+            }
+          },
+          interface {
+            name,
+            hwaddr,
+            addresses {
+              name,
+              address
+            }
+          }
+        }
+      }
+    }
+  }
+}

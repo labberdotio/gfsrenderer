@@ -1,0 +1,19 @@
+
+{% for HTTPService in data.HTTPServices %}
+<h3>{{HTTPService.description}}</h3>
+{% if HTTPService.services %}{% for group in HTTPService.services %}
+<p>
+{{group.description}}<br/>
+{% if group.members %}{% for member in group.members %}{% if member.host %}
+<!--
+<a href="{{member.pcol}}://{% if member.host.interface %}{% if member.host.interface.addresses %}{% for address in member.host.interface.addresses %}{% if address.address %}{{address.address}}{% endif %}{% endfor %}{% endif %}{% endif %}:{{member.port}}{{member.path}}">{{member.description}}</a><br/>
+-->
+<a href="{{member.pcol}}://{{member.host.name}}:{{member.port}}{{member.path}}">{{member.description}}</a><br/>
+{% endif %}{% if member.alias %}{% if member.alias.host %}
+<!--
+<a href="{{member.pcol}}://{% if member.alias.host.interface %}{% if member.alias.host.interface.addresses %}{% for address in member.alias.host.interface.addresses %}{% if address.address %}{{address.address}}{% endif %}{% endfor %}{% endif %}{% endif %}:{{member.port}}{{member.path}}">{{member.description}}</a><br/>
+-->
+<a href="{{member.pcol}}://{{member.alias.name}}:{{member.port}}{{member.path}}">{{member.description}}</a><br/>
+{% endif %}{% endif %}{% endfor %}{% endif %}
+</p>
+{% endfor %}{% endif %}{% endfor %}
