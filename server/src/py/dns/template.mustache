@@ -1,0 +1,70 @@
+
+{{#data}}
+{{#DNSMasqServices}}
+
+# https://wiki.archlinux.org/title/dnsmasq
+# https://serverfault.com/questions/943215/dnsmasq-unable-to-resolve-local-host
+
+domain-needed
+bogus-priv
+
+domain=example.dev
+expand-hosts
+local=/localdomain/
+
+#dnsmasq config, for a complete example, see:
+#  http://oss.segetech.com/intra/srv/dnsmasq.conf
+#log all dns queries
+log-queries
+#dont use hosts nameservers
+no-resolv
+
+# use cloudflare as default nameservers, prefer 1^4
+# server=1.0.0.1
+# server=1.1.1.1
+{{#resolvers}}
+# DNS server {{name}} ({{description}})
+{{#members}}
+# {{name}} ({{description}})
+server={{#addresses}}{{address}}{{/addresses}}
+
+{{/members}}
+{{/resolvers}}
+
+strict-order
+#serve all .company queries using a specific nameserver
+# server=/botcanics.com/10.88.88.60
+
+{{#deployed}}
+# Deployed to {{name}}
+server=/localdomain/{{address}}
+{{/deployed}}
+
+# Make these match the DHCP hosts -- 
+# address=/controller.dev.botcanics.com/192.168.56.60
+
+
+{{#hosts}}
+# 
+# Group {{name}} ({{description}})
+# 
+{{#members}}
+# {{name}} ({{description}})
+address=/{{name}}.localdomain/{{#interfaces}}{{#addresses}}{{address}}{{/addresses}}{{/interfaces}}
+
+{{/members}}
+{{/hosts}}
+
+{{#aliases}}
+# 
+# Group {{name}} ({{description}})
+# 
+{{#members}}
+# {{name}} ({{description}})
+address=/{{name}}.localdomain/{{#host}}{{#interfaces}}{{#addresses}}{{address}}{{/addresses}}{{/interfaces}}{{/host}}
+
+{{/members}}
+{{/aliases}}
+
+{{/DNSMasqServices}}
+{{/data}}

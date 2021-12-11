@@ -1,0 +1,22 @@
+six==1.11.0
+
+future
+futures
+requests
+
+# flask
+flask==1.0.2
+flask_socketio
+python-engineio
+python-socketio
+werkzeug==0.14.1
+
+python-graphql-client
+py-graphql-client
+simplejson
+PyYAML
+flatten_json
+# Python 3.6 vs 3.9 on Debian 11
+# pystache==0.5.0
+pystache==0.5.4
+Jinja2
