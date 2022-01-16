@@ -60,9 +60,36 @@ gqlClient = GFSGQL(
 # 
 # 
 
+@app.route('/query', methods=['POST'])
+def query():
+    from flask import request
+    import simplejson as json
+
+    query = request.form.get("query")
+
+    if not query:
+        return Response(
+            "Unable to read query, please pass a valid query",
+            status=400,
+        )
+
+    return Response(
+        json.dumps(
+            gqlClient.gqlexec(
+                query,
+                {
+                }
+            ), 
+            indent=2, 
+            sort_keys=False
+        ), 
+        mimetype='application/json'
+    )
+
 @app.route('/render', methods=['POST'])
 def render():
     from flask import request
+    import simplejson as json
 
     format = request.args.get("format", "mustache")
     if not format:
@@ -92,7 +119,6 @@ def render():
 
     if context:
         try:
-            import simplejson as json
             context = json.loads(
                 context
             )
