@@ -60,6 +60,85 @@ gqlClient = GFSGQL(
 # 
 # 
 
+@app.route('/render', methods=['POST'])
+def render():
+    from flask import request
+
+    format = request.args.get("format", "mustache")
+    if not format:
+        format = "mustache"
+
+    query = request.form.get("query")
+    template = request.form.get("template")
+    context = request.form.get("context")
+
+    if format not in ["mustache", "handlebars", "jinja"]:
+        return Response(
+            "Invalid format, template formats are mustache, handlebars or jinja",
+            status=400,
+        )
+
+    if not query:
+        return Response(
+            "Unable to read query, please pass a valid query",
+            status=400,
+        )
+
+    if not template:
+        return Response(
+            "Unable to read template, please pass a valid template, format is set to " + str(format),
+            status=400,
+        )
+
+    if context:
+        try:
+            import simplejson as json
+            context = json.loads(
+                context
+            )
+        except Exception as e:
+            return Response(
+                "Unable to read context, if you want to pass an additional render context please pass valid JSON",
+                status=400,
+            )
+
+    if format == "jinja":
+        from jinja2 import Template
+        t1 = Template(
+            template
+        )
+        return Response(
+            t1.render(
+                gqlClient.gqlexec(
+                    query,
+                    {
+                    }
+                )
+            ), 
+            mimetype='application/text'
+        )
+
+    elif format == "handlebars":
+        pass
+
+    else:
+        import pystache
+        return Response(
+            pystache.render(
+                template,
+                gqlClient.gqlexec(
+                    query,
+                    {
+                    }
+                ), 
+            ), 
+            mimetype='application/text'
+        )
+
+# 
+# 
+# 
+
 @app.route('/dhcpquery')
 def dhcpquery():
     queryfile = open("./dhcp/" + str(GRAPHQLQUERY), "r")
