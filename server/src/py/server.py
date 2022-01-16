@@ -73,13 +73,27 @@ def query():
             status=400,
         )
 
+    data = {}
+    try:
+        data = gqlClient.gqlexec(
+            query,
+            {
+            }
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            # "GQL GraphQL error " + str(e.response.json()),
+            str(e),
+            status=400,
+        )
+
+    if not data:
+        data = {}
+
     return Response(
         json.dumps(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
+            data, 
             indent=2, 
             sort_keys=False
         ), 
@@ -128,6 +142,23 @@ def render():
                 status=400,
             )
 
+    data = {}
+    try:
+        data = gqlClient.gqlexec(
+            query,
+            {
+            }
+        )
+    except Exception as e:
+        return Response(
+            # "GQL GraphQL error " + str(e.response.json()),
+            str(e),
+            status=400,
+        )
+
+    if not data:
+        data = {}
+
     if format == "jinja":
         from jinja2 import Template
         t1 = Template(
@@ -135,11 +166,7 @@ def render():
         )
         return Response(
             t1.render(
-                gqlClient.gqlexec(
-                    query,
-                    {
-                    }
-                )
+                data
             ), 
             mimetype='application/text'
         )
@@ -152,11 +179,7 @@ def render():
         return Response(
             pystache.render(
                 template,
-                gqlClient.gqlexec(
-                    query,
-                    {
-                    }
-                ), 
+                data, 
             ), 
             mimetype='application/text'
         )
