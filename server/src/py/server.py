@@ -60,6 +60,134 @@ gqlClient = GFSGQL(
 # 
 # 
 
+@app.route('/query', methods=['POST'])
+def query():
+    from flask import request
+    import simplejson as json
+
+    query = request.form.get("query")
+
+    if not query:
+        return Response(
+            "Unable to read query, please pass a valid query",
+            status=400,
+        )
+
+    data = {}
+    try:
+        data = gqlClient.gqlexec(
+            query,
+            {
+            }
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            # "GQL GraphQL error " + str(e.response.json()),
+            str(e),
+            status=400,
+        )
+
+    if not data:
+        data = {}
+
+    return Response(
+        json.dumps(
+            data, 
+            indent=2, 
+            sort_keys=False
+        ), 
+        mimetype='application/json'
+    )
+
+@app.route('/render', methods=['POST'])
+def render():
+    from flask import request
+    import simplejson as json
+
+    format = request.args.get("format", "mustache")
+    if not format:
+        format = "mustache"
+
+    query = request.form.get("query")
+    template = request.form.get("template")
+    context = request.form.get("context")
+
+    if format not in ["mustache", "handlebars", "jinja"]:
+        return Response(
+            "Invalid format, template formats are mustache, handlebars or jinja",
+            status=400,
+        )
+
+    if not query:
+        return Response(
+            "Unable to read query, please pass a valid query",
+            status=400,
+        )
+
+    if not template:
+        return Response(
+            "Unable to read template, please pass a valid template, format is set to " + str(format),
+            status=400,
+        )
+
+    if context:
+        try:
+            context = json.loads(
+                context
+            )
+        except Exception as e:
+            return Response(
+                "Unable to read context, if you want to pass an additional render context please pass valid JSON",
+                status=400,
+            )
+
+    data = {}
+    try:
+        data = gqlClient.gqlexec(
+            query,
+            {
+            }
+        )
+    except Exception as e:
+        return Response(
+            # "GQL GraphQL error " + str(e.response.json()),
+            str(e),
+            status=400,
+        )
+
+    if not data:
+        data = {}
+
+    if format == "jinja":
+        from jinja2 import Template
+        t1 = Template(
+            template
+        )
+        return Response(
+            t1.render(
+                data
+            ), 
+            mimetype='application/text'
+        )
+
+    elif format == "handlebars":
+        pass
+
+    else:
+        import pystache
+        return Response(
+            pystache.render(
+                template,
+                data, 
+            ), 
+            mimetype='application/text'
+        )
+
+# 
+# 
+# 
+
 @app.route('/dhcpquery')
 def dhcpquery():
     queryfile = open("./dhcp/" + str(GRAPHQLQUERY), "r")
