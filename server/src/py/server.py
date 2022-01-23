@@ -190,7 +190,7 @@ def render():
 
 @app.route('/dhcpquery')
 def dhcpquery():
-    queryfile = open("./dhcp/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/dhcp/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     return Response(
         query, 
@@ -199,7 +199,7 @@ def dhcpquery():
 
 @app.route('/dhcptemplate')
 def dhcptemplate():
-    templatefile = open("./dhcp/" + str(MUSTACHETEMPLATE), "r")
+    templatefile = open("/app/src/py/dhcp/" + str(MUSTACHETEMPLATE), "r")
     template = templatefile.read()
     return Response(
         template, 
@@ -208,7 +208,7 @@ def dhcptemplate():
 
 @app.route('/rundhcpquery')
 def rundhcpquery():
-    queryfile = open("./dhcp/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/dhcp/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     import simplejson as json
     return Response(
@@ -226,9 +226,9 @@ def rundhcpquery():
 
 @app.route('/dhcp')
 def dhcp():
-    queryfile = open("./dhcp/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/dhcp/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
-    templatefile = open("./dhcp/" + str(MUSTACHETEMPLATE), "r")
+    templatefile = open("/app/src/py/dhcp/" + str(MUSTACHETEMPLATE), "r")
     template = templatefile.read()
     import pystache
     return Response(
@@ -249,7 +249,7 @@ def dhcp():
 
 @app.route('/dnsquery')
 def dnsquery():
-    queryfile = open("./dns/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/dns/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     return Response(
         query, 
@@ -258,7 +258,7 @@ def dnsquery():
 
 @app.route('/dnstemplate')
 def dnstemplate():
-    templatefile = open("./dns/" + str(MUSTACHETEMPLATE), "r")
+    templatefile = open("/app/src/py/dns/" + str(MUSTACHETEMPLATE), "r")
     template = templatefile.read()
     return Response(
         template, 
@@ -267,7 +267,7 @@ def dnstemplate():
 
 @app.route('/rundnsquery')
 def rundnsquery():
-    queryfile = open("./dns/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/dns/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     import simplejson as json
     return Response(
@@ -285,9 +285,9 @@ def rundnsquery():
 
 @app.route('/dns')
 def dns():
-    queryfile = open("./dns/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/dns/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
-    templatefile = open("./dns/" + str(MUSTACHETEMPLATE), "r")
+    templatefile = open("/app/src/py/dns/" + str(MUSTACHETEMPLATE), "r")
     template = templatefile.read()
     import pystache
     return Response(
@@ -308,7 +308,7 @@ def dns():
 
 @app.route('/bindconfquery')
 def bindconfquery():
-    queryfile = open("./bindconf/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/bindconf/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     return Response(
         query, 
@@ -317,7 +317,7 @@ def bindconfquery():
 
 @app.route('/bindconftemplate')
 def bindconftemplate():
-    templatefile = open("./bindconf/" + str(MUSTACHETEMPLATE), "r")
+    templatefile = open("/app/src/py/bindconf/" + str(MUSTACHETEMPLATE), "r")
     template = templatefile.read()
     return Response(
         template, 
@@ -326,7 +326,7 @@ def bindconftemplate():
 
 @app.route('/runbindconfquery')
 def runbindconfquery():
-    queryfile = open("./bindconf/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/bindconf/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     import simplejson as json
     return Response(
@@ -344,9 +344,9 @@ def runbindconfquery():
 
 @app.route('/bindconf')
 def bindconf():
-    queryfile = open("./bindconf/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/bindconf/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
-    templatefile = open("./bindconf/" + str(MUSTACHETEMPLATE), "r")
+    templatefile = open("/app/src/py/bindconf/" + str(MUSTACHETEMPLATE), "r")
     template = templatefile.read()
     import pystache
     return Response(
@@ -367,7 +367,7 @@ def bindconf():
 
 @app.route('/bindzonequery')
 def bindzonequery():
-    queryfile = open("./bindzone/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/bindzone/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     return Response(
         query, 
@@ -376,7 +376,7 @@ def bindzonequery():
 
 @app.route('/bindzonetemplate')
 def bindzonetemplate():
-    templatefile = open("./bindzone/" + str(MUSTACHETEMPLATE), "r")
+    templatefile = open("/app/src/py/bindzone/" + str(MUSTACHETEMPLATE), "r")
     template = templatefile.read()
     return Response(
         template, 
@@ -385,7 +385,7 @@ def bindzonetemplate():
 
 @app.route('/runbindzonequery')
 def runbindzonequery():
-    queryfile = open("./bindzone/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/bindzone/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     import simplejson as json
     return Response(
@@ -403,9 +403,9 @@ def runbindzonequery():
 
 @app.route('/bindzone')
 def bindzone():
-    queryfile = open("./bindzone/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/bindzone/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
-    templatefile = open("./bindzone/" + str(MUSTACHETEMPLATE), "r")
+    templatefile = open("/app/src/py/bindzone/" + str(MUSTACHETEMPLATE), "r")
     template = templatefile.read()
     import datetime
     from datetime import datetime
@@ -455,7 +455,7 @@ def bindzone():
 
 @app.route('/hostsquery')
 def hostsquery():
-    queryfile = open("./hosts/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/hosts/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     return Response(
         query, 
@@ -464,7 +464,7 @@ def hostsquery():
 
 @app.route('/hoststemplate')
 def hoststemplate():
-    templatefile = open("./hosts/" + str(JINJATEMPLATE), "r")
+    templatefile = open("/app/src/py/hosts/" + str(JINJATEMPLATE), "r")
     template = templatefile.read()
     return Response(
         template, 
@@ -473,7 +473,7 @@ def hoststemplate():
 
 @app.route('/runhostsquery')
 def runhostsquery():
-    queryfile = open("./hosts/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/hosts/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     import simplejson as json
     return Response(
@@ -491,9 +491,9 @@ def runhostsquery():
 
 @app.route('/hosts')
 def hosts():
-    queryfile = open("./hosts/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/hosts/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
-    templatefile = open("./hosts/" + str(JINJATEMPLATE), "r")
+    templatefile = open("/app/src/py/hosts/" + str(JINJATEMPLATE), "r")
     template = templatefile.read()
     # import pystache
     # return pystache.render(
@@ -525,7 +525,7 @@ def hosts():
 
 @app.route('/sshquery')
 def sshquery():
-    queryfile = open("./ssh/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/ssh/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     return Response(
         query, 
@@ -534,7 +534,7 @@ def sshquery():
 
 @app.route('/sshtemplate')
 def sshtemplate():
-    templatefile = open("./ssh/" + str(JINJATEMPLATE), "r")
+    templatefile = open("/app/src/py/ssh/" + str(JINJATEMPLATE), "r")
     template = templatefile.read()
     return Response(
         template, 
@@ -543,7 +543,7 @@ def sshtemplate():
 
 @app.route('/runsshsquery')
 def runsshquery():
-    queryfile = open("./ssh/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/ssh/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     import simplejson as json
     return Response(
@@ -561,9 +561,9 @@ def runsshquery():
 
 @app.route('/ssh')
 def ssh():
-    queryfile = open("./ssh/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/ssh/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
-    templatefile = open("./ssh/" + str(JINJATEMPLATE), "r")
+    templatefile = open("/app/src/py/ssh/" + str(JINJATEMPLATE), "r")
     template = templatefile.read()
     # import pystache
     # return pystache.render(
@@ -595,7 +595,7 @@ def ssh():
 
 @app.route('/httpquery')
 def httpquery():
-    queryfile = open("./http/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/http/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     return Response(
         query, 
@@ -604,7 +604,7 @@ def httpquery():
 
 @app.route('/httptemplate')
 def httptemplate():
-    templatefile = open("./http/" + str(JINJATEMPLATE), "r")
+    templatefile = open("/app/src/py/http/" + str(JINJATEMPLATE), "r")
     template = templatefile.read()
     return Response(
         template, 
@@ -613,7 +613,7 @@ def httptemplate():
 
 @app.route('/httpquery')
 def runhttpquery():
-    queryfile = open("./http/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/http/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
     import simplejson as json
     return Response(
@@ -631,9 +631,9 @@ def runhttpquery():
 
 @app.route('/http')
 def http():
-    queryfile = open("./http/" + str(GRAPHQLQUERY), "r")
+    queryfile = open("/app/src/py/http/" + str(GRAPHQLQUERY), "r")
     query = queryfile.read()
-    templatefile = open("./http/" + str(JINJATEMPLATE), "r")
+    templatefile = open("/app/src/py/http/" + str(JINJATEMPLATE), "r")
     template = templatefile.read()
     # import pystache
     # return pystache.render(
