@@ -34,7 +34,10 @@ query bootd2 {
         version,
         image,
         port,
-        uri
+        uri,
+        kernel,
+        initrd,
+        imgargs
       },
       kickstart {
         name,
