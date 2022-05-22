@@ -247,6 +247,65 @@ def dhcp():
 # 
 # 
 
+@app.route('/ipxedhcpquery')
+def ipxedhcpquery():
+    queryfile = open("./src/py/ipxedhcp/" + str(GRAPHQLQUERY), "r")
+    query = queryfile.read()
+    return Response(
+        query, 
+        mimetype='application/text'
+    )
+
+@app.route('/ipxedhcptemplate')
+def ipxedhcptemplate():
+    templatefile = open("./src/py/ipxedhcp/" + str(MUSTACHETEMPLATE), "r")
+    template = templatefile.read()
+    return Response(
+        template, 
+        mimetype='application/text'
+    )
+
+@app.route('/runipxedhcpquery')
+def runipxedhcpquery():
+    queryfile = open("./src/py/ipxedhcp/" + str(GRAPHQLQUERY), "r")
+    query = queryfile.read()
+    import simplejson as json
+    return Response(
+        json.dumps(
+            gqlClient.gqlexec(
+                query,
+                {
+                }
+            ), 
+            indent=2, 
+            sort_keys=False
+        ), 
+        mimetype='application/json'
+    )
+
+@app.route('/ipxedhcp')
+def ipxedhcp():
+    queryfile = open("./src/py/ipxedhcp/" + str(GRAPHQLQUERY), "r")
+    query = queryfile.read()
+    templatefile = open("./src/py/ipxedhcp/" + str(MUSTACHETEMPLATE), "r")
+    template = templatefile.read()
+    import pystache
+    return Response(
+        pystache.render(
+            template,
+            gqlClient.gqlexec(
+                query,
+                {
+                }
+            ), 
+        ), 
+        mimetype='application/text'
+    )
+
+# 
+# 
+# 
+
 @app.route('/dnsquery')
 def dnsquery():
     queryfile = open("/app/src/py/dns/" + str(GRAPHQLQUERY), "r")
