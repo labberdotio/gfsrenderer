@@ -1,0 +1,54 @@
+query bootd2 {
+  BootDirectiveGroups(
+      name: "bootd2"
+    ) {
+    name,
+    description,
+    members {
+      name,
+      description,
+      machine {
+        name,
+        description,
+        defaultInterface {
+          name,
+          device,
+          hwaddr, 
+          addresses {
+            address
+          }
+        }
+        managementInterface {
+          name,
+          device,
+          hwaddr, 
+          addresses {
+            address
+          }
+        }
+      },
+      nodeBoot,
+      distro {
+        name,
+        description,
+        version,
+        image,
+        port,
+        uri
+      },
+      kickstart {
+        name,
+        description,
+        path,
+        port,
+        uri
+      }
+      iSCSIServerHost,
+      iSCSIServerPort,
+      iSCSILun,
+      nodeInstallInterface,
+      localInstallIPXEDevice,
+      distroInstallDevice
+    }
+  }
+}
