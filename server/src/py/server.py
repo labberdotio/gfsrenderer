@@ -733,6 +733,76 @@ def bootds():
 # 
 # 
 
+@app.route('/installimgsquery')
+def installimgsquery():
+    queryfile = open("./src/py/installimgs/" + str(GRAPHQLQUERY), "r")
+    query = queryfile.read()
+    return Response(
+        query, 
+        mimetype='application/text'
+    )
+
+@app.route('/installimgstemplate')
+def installimgstemplate():
+    templatefile = open("./src/py/installimgs/" + str(JINJATEMPLATE), "r")
+    template = templatefile.read()
+    return Response(
+        template, 
+        mimetype='application/text'
+    )
+
+@app.route('/runinstallimgsquery')
+def runinstallimgsquery():
+    queryfile = open("./src/py/installimgs/" + str(GRAPHQLQUERY), "r")
+    query = queryfile.read()
+    import simplejson as json
+    return Response(
+        json.dumps(
+            gqlClient.gqlexec(
+                query,
+                {
+                }
+            ), 
+            indent=2, 
+            sort_keys=False
+        ), 
+        mimetype='application/json'
+    )
+
+@app.route('/installimgs')
+def installimgs():
+    queryfile = open("./src/py/installimgs/" + str(GRAPHQLQUERY), "r")
+    query = queryfile.read()
+    templatefile = open("./src/py/installimgs/" + str(JINJATEMPLATE), "r")
+    template = templatefile.read()
+    # import pystache
+    # return pystache.render(
+    #     template,
+    #     gqlClient.gqlexec(
+    #         query,
+    #         {
+    #         }
+    #     ), 
+    # )
+    from jinja2 import Template
+    t1 = Template(
+       template
+    )
+    return Response(
+        t1.render(
+            gqlClient.gqlexec(
+                query,
+                {
+                }
+            )
+        ), 
+        mimetype='application/json'
+    )
+
+# 
+# 
+# 
+
 if __name__ == '__main__':
     # socketio.run(app, host=LISTENERADDR, port=LISTENERPORT)
     socketio.run(app, host=str(listen_addr), port=int(listen_port))

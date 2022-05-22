@@ -1,0 +1,10 @@
+{ {% for group in data.InstallImageGroups %}{% for member in group.members %}
+    "{{member.name}}" : {
+        "distro-name": "{{member.name}}", 
+        "distro-description": "{{member.description}}", 
+        "distro-uri": "{{member.uri}}", 
+        "distro-kernel": "{{member.kernel}}", 
+        "distro-initrd": "{{member.initrd}}", 
+        "distro-imgargs": "{{member.imgargs}}"
+    }{% if not loop.last %},{% endif %}{% endfor %}{% endfor %}
+}
