@@ -57,132 +57,333 @@ gqlClient = GFSGQL(
 )
 
 # 
+# GFS DAO error class
+# 
+class GFSError(Exception):
+
+    def __init__(self, error):
+        self.error = error
+
+    def __str__(self):
+        return str(self.error)
+
+# 
 # 
 # 
 
-@app.route('/query', methods=['POST'])
+# @app.route('/query', methods=['GET', 'POST'])
+@app.route('/query', methods=['GET'])
 def query():
     from flask import request
     import simplejson as json
-
-    query = request.form.get("query")
-
-    if not query:
-        return Response(
-            "Unable to read query, please pass a valid query",
-            status=400,
-        )
-
-    data = {}
     try:
-        data = gqlClient.gqlexec(
-            query,
-            {
-            }
+        return Response(
+            json.dumps(
+                doquery(
+                    resolvequery(
+                        queryname = request.args.get("query")
+                    ), 
+                    params = request.args
+                ), 
+                indent=2, 
+                sort_keys=False
+            ), 
+            mimetype='application/json'
         )
     except Exception as e:
-        print(e)
         return Response(
-            # "GQL GraphQL error " + str(e.response.json()),
             str(e),
             status=400,
         )
 
-    if not data:
-        data = {}
-
-    return Response(
-        json.dumps(
-            data, 
-            indent=2, 
-            sort_keys=False
-        ), 
-        mimetype='application/json'
-    )
-
-@app.route('/render', methods=['POST'])
+# @app.route('/render', methods=['GET', 'POST'])
+@app.route('/render', methods=['GET'])
 def render():
     from flask import request
     import simplejson as json
-
-    format = request.args.get("format", "mustache")
-    if not format:
-        format = "mustache"
-
-    query = request.form.get("query")
-    template = request.form.get("template")
-    context = request.form.get("context")
-
-    if format not in ["mustache", "handlebars", "jinja"]:
+    try:
+        (template, format) = resolvetemplate(
+            templatename = request.args.get("template")
+        )
         return Response(
-            "Invalid format, template formats are mustache, handlebars or jinja",
+            dorender(
+                template = template, 
+                format = format, 
+                data = doquery(
+                    query = resolvequery(
+                        queryname = request.args.get("query")
+                    ), 
+                    params = request.args
+                ), 
+            ), 
+            mimetype='application/text'
+        )
+    except Exception as e:
+        return Response(
+            str(e),
             status=400,
         )
+
+@app.route('/view', methods=['GET'])
+def view():
+    from flask import request
+    import simplejson as json
+    try:
+        (query, template, format) = resolveview(
+            viewname = request.args.get("view")
+        )
+        (template, format) = resolvetemplate(
+            templatename = template["name"], 
+            template = template["template"], 
+            format = template["format"], 
+        )
+        return Response(
+            dorender(
+                template = template, 
+                format = format, 
+                data = doquery(
+                    query = resolvequery(
+                        queryname = query["name"], 
+                        query = query["query"]
+                    ), 
+                    params = request.args
+                ), 
+            ), 
+            mimetype='application/text'
+        )
+    except Exception as e:
+        return Response(
+            str(e),
+            status=400,
+        )
+
+# 
+# 
+# 
+def resolvequery(queryname, query = None):
+
+    if not queryname and not query:
+        # return Response(
+        #     "Unable to read query, please pass a valid query",
+        #     status=400,
+        # )
+        raise GFSError("Unable to read query, please pass a valid query")
+
+    if queryname:
+        try:
+            queryquery = """
+                query queryquery {
+                    queries(
+                        name: "%s"
+                    ) {
+                        name, 
+                        query
+                    }
+                }
+            """ % (
+                queryname
+            )
+            querydata = gqlClient.gqlexec(
+                queryquery,
+                {
+                }
+            )
+            if querydata and \
+                "data" in querydata and \
+                "queries" in querydata["data"] and \
+                querydata["data"]["queries"] and len(querydata["data"]["queries"]) > 0 :
+                query = querydata["data"]["queries"][0]["query"]
+
+        except Exception as e:
+            # return Response(
+            #     # "Query error: " + str(e.response.json()),
+            #     str(e),
+            #     status=400,
+            # )
+            raise
 
     if not query:
-        return Response(
-            "Unable to read query, please pass a valid query",
-            status=400,
-        )
+        # return Response(
+        #     "Unable to read query, please pass a valid query",
+        #     status=400,
+        # )
+        raise GFSError("Unable to read query, please pass a valid query")
 
-    if not template:
-        return Response(
-            "Unable to read template, please pass a valid template, format is set to " + str(format),
-            status=400,
-        )
+    return query
 
-    if context:
+# 
+# 
+# 
+def resolvetemplate(templatename, template = None, format = "mustache"):
+
+    if not templatename and not template:
+        # return Response(
+        #     "Unable to read template, please pass a valid template, format is set to " + str(format),
+        #     status=400,
+        # )
+        raise GFSError("Unable to read template, please pass a valid template, format is set to " + str(format))
+
+    if templatename:
         try:
-            context = json.loads(
-                context
+            templatequery = """
+                query templatequery {
+                    templates(
+                        name: "%s"
+                    ) {
+                        name, 
+                        template, 
+                        format
+                    }
+                }
+            """ % (
+                templatename
             )
+            templatedata = gqlClient.gqlexec(
+                templatequery,
+                {
+                }
+            )
+            if templatedata and \
+                "data" in templatedata and \
+                "templates" in templatedata["data"] and \
+                templatedata["data"]["templates"] and len(templatedata["data"]["templates"]) > 0 :
+                template = templatedata["data"]["templates"][0]["template"]
+                format = templatedata["data"]["templates"][0]["format"]
+                if not format:
+                    format = "mustache"
+
         except Exception as e:
-            return Response(
-                "Unable to read context, if you want to pass an additional render context please pass valid JSON",
-                status=400,
+            # return Response(
+            #     # "Query error: " + str(e.response.json()),
+            #     str(e),
+            #     status=400,
+            # )
+            raise
+
+    return (template, format)
+
+# 
+# 
+# 
+def resolveview(viewname):
+
+    query = None
+    template = None
+    partials = []
+
+    if viewname:
+        try:
+            viewquery = """
+                query viewquery {
+                    views(
+                        name: "%s"
+                    ) {
+                        name,
+                        query {
+                            name,
+                            query
+                        },
+                        template {
+                            name,
+                            template,
+                            format
+                        }
+                        partials {
+                            name,
+                            template,
+                            format
+                        }
+                    }
+                }
+            """ % (
+                viewname
             )
+            querydata = gqlClient.gqlexec(
+                viewquery,
+                {
+                }
+            )
+            if querydata and \
+                "data" in querydata and \
+                "views" in querydata["data"] and \
+                querydata["data"]["views"] and len(querydata["data"]["views"]) > 0 :
+                view = querydata["data"]["views"][0]
+                query = querydata["data"]["views"][0]["query"]
+                template = querydata["data"]["views"][0]["template"]
+                partials = querydata["data"]["views"][0]["partials"]
+
+        except Exception as e:
+            # return Response(
+            #     # "Query error: " + str(e.response.json()),
+            #     str(e),
+            #     status=400,
+            # )
+            raise
+
+    return (query, template, partials)
+
+# 
+# 
+# 
+def doquery(query, params = {}):
 
     data = {}
     try:
         data = gqlClient.gqlexec(
             query,
-            {
-            }
+            params
         )
     except Exception as e:
-        return Response(
-            # "GQL GraphQL error " + str(e.response.json()),
-            str(e),
-            status=400,
-        )
+        # return Response(
+        #     # "Query error: " + str(e.response.json()),
+        #     str(e),
+        #     status=400,
+        # )
+        raise
 
     if not data:
         data = {}
+
+    return data
+
+# 
+# 
+# 
+def dorender(template, format = "mustache", data = {}):
+
+    if format not in ["mustache", "handlebars", "jinja"]:
+        # return Response(
+        #     "Invalid format, template formats are mustache, handlebars or jinja",
+        #     status=400,
+        # )
+        raise GFSError("Invalid format, template formats are mustache, handlebars or jinja")
 
     if format == "jinja":
         from jinja2 import Template
         t1 = Template(
             template
         )
-        return Response(
-            t1.render(
-                data
-            ), 
-            mimetype='application/text'
+        # return Response(
+        return t1.render(
+            data
         )
+        # , 
+        #     mimetype='application/text'
+        # )
 
     elif format == "handlebars":
         pass
 
     else:
         import pystache
-        return Response(
-            pystache.render(
-                template,
-                data, 
-            ), 
-            mimetype='application/text'
+        # return Response(
+        return pystache.render(
+            template,
+            data, 
         )
+        # , 
+        #     mimetype='application/text'
+        # )
 
 # 
 # 
@@ -190,4 +391,13 @@ def render():
 
 if __name__ == '__main__':
     # socketio.run(app, host=LISTENERADDR, port=LISTENERPORT)
-    socketio.run(app, host=str(listen_addr), port=int(listen_port))
+    # 
+    # TODO: I need to fix this
+    # RuntimeError: The Werkzeug web server is not designed to run in production. Pass allow_unsafe_werkzeug=True to the run() method to disable this error.
+    # 
+    socketio.run(
+        app, 
+        host=str(listen_addr), 
+        port=int(listen_port), 
+        # allow_unsafe_werkzeug=True
+    )
