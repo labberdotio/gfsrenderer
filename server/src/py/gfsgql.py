@@ -15,7 +15,10 @@ from python_graphql_client import GraphqlClient
 class GFSGQLError(Exception):
 
     def __init__(self, error):
-        pass
+        self.error = error
+
+    def __str__(self):
+        return str(self.error)
 
 
 
@@ -43,7 +46,7 @@ class GFSGQL():
 
         self.api_namespace = "gfs1"
 
-        self.gfs_gqlurl = "http://" + self.gfs_host + ":" + self.gfs_port + "/" + self.api_namespace + "/" + "graphql"
+        self.gfs_gqlurl = "http://" + self.gfs_host + ":" + self.gfs_port + "/server/" + self.api_namespace + "/" + "graphql"
 
         self.gfs_gqlclient = GraphqlClient(
             endpoint=self.gfs_gqlurl

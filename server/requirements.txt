@@ -1,22 +1,79 @@
-six==1.11.0
 
 future
 futures
-requests
 
-# flask
-flask==1.0.2
-flask_socketio
-python-engineio
-python-socketio
-werkzeug==0.14.1
+pika==1.1.0
+kafka-python
 
-python-graphql-client
-py-graphql-client
 simplejson
+# 0.1.7/0.1.8 has bugs
+flatten_json==0.1.6
+addict
+
 PyYAML
-flatten_json
-# Python 3.6 vs 3.9 on Debian 11
-# pystache==0.5.0
-pystache==0.5.4
-Jinja2
+ruamel.yaml==0.17.21
+# pystache
+# flask
+# Flask==1.1.1
+Flask==2.1.2
+flask-blueprint
+Flask-RESTful
+flask-cors
+flask-swagger
+flask-socketio
+Flask-Sockets==0.2.1
+# gevent==1.4.0
+gevent==1.5.0
+gevent-websocket==0.10.1
+# 
+# TypeError: an integer is required (got type bytes)
+# Flask/pyspark 2.4 and python 3.8
+# 
+# > python --version
+# Python 3.8.13
+# pip install --upgrade pyspark
+# > pip freeze
+# pyspark==3.3.0
+# 
+pyspark==3.3.0
+# Flask import error
+# ImportError: cannot import name 'escape' from 'jinja2'
+# Jinja2==3.1.1
+Jinja2==3.0.3
+
+# I mean, wtf?
+# ImportError: cannot import name 'json' from 'itsdangerous' (/usr/lib/python3.8/site-packages/itsdangerous/__init__.py)
+# itsdangerous==2.0.1
+# MarkupSafe==2.0.1
+itsdangerous==2.0.1
+MarkupSafe==2.0.1
+
+greenlet==0.4.16
+
+importlib-metadata
+importlib-resources
+jsonschema
+
+# flask_graphql
+Flask-GraphQL==2.0.0
+# graphene
+graphene==2.1.8
+
+graphql-core==2.2.1
+graphql-relay==2.0.0
+graphql-server-core==1.1.1
+# graphql-ws==0.3.0
+graphql-ws==0.3.1
+
+# Werkzeug==0.15.5
+# Werkzeug==2.0.0
+Werkzeug==2.1.2
+
+# Rx==3.1.1
+Rx==1.6.1
+
+# 
+# REST/GraphQL test client
+# 
+requests==2.26.0
+python-graphql-client==0.4.3

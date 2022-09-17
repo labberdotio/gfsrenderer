@@ -29,8 +29,8 @@ listen_addr = os.environ.get("LISTEN_ADDR", "0.0.0.0")
 listen_port = os.environ.get("LISTEN_PORT", "5000")
 
 # gfs_ns = os.environ.get("GFS_NAMESPACE", "gfs1")
-gfs_host = os.environ.get("GFS_HOST", "gfsapi")
-gfs_port = os.environ.get("GFS_PORT", "5000")
+gfs_host = os.environ.get("GFS_HOST", "botcanics-gfssaas.localdomain")
+gfs_port = os.environ.get("GFS_PORT", "80")
 gfs_username = os.environ.get("GFS_USERNAME", "root")
 gfs_password = os.environ.get("GFS_PASSWORD", "root")
 
@@ -57,806 +57,334 @@ gqlClient = GFSGQL(
 )
 
 # 
+# GFS DAO error class
+# 
+class GFSError(Exception):
+
+    def __init__(self, error):
+        self.error = error
+
+    def __str__(self):
+        return str(self.error)
+
+# 
 # 
 # 
 
-@app.route('/query', methods=['POST'])
+# @app.route('/query', methods=['GET', 'POST'])
+@app.route('/query', methods=['GET'])
 def query():
     from flask import request
     import simplejson as json
-
-    query = request.form.get("query")
-
-    if not query:
-        return Response(
-            "Unable to read query, please pass a valid query",
-            status=400,
-        )
-
-    data = {}
     try:
-        data = gqlClient.gqlexec(
-            query,
-            {
-            }
+        return Response(
+            json.dumps(
+                doquery(
+                    resolvequery(
+                        queryname = request.args.get("query")
+                    ), 
+                    params = request.args
+                ), 
+                indent=2, 
+                sort_keys=False
+            ), 
+            mimetype='application/json'
         )
     except Exception as e:
-        print(e)
         return Response(
-            # "GQL GraphQL error " + str(e.response.json()),
             str(e),
             status=400,
         )
 
-    if not data:
-        data = {}
-
-    return Response(
-        json.dumps(
-            data, 
-            indent=2, 
-            sort_keys=False
-        ), 
-        mimetype='application/json'
-    )
-
-@app.route('/render', methods=['POST'])
+# @app.route('/render', methods=['GET', 'POST'])
+@app.route('/render', methods=['GET'])
 def render():
     from flask import request
     import simplejson as json
-
-    format = request.args.get("format", "mustache")
-    if not format:
-        format = "mustache"
-
-    query = request.form.get("query")
-    template = request.form.get("template")
-    context = request.form.get("context")
-
-    if format not in ["mustache", "handlebars", "jinja"]:
+    try:
+        (template, format) = resolvetemplate(
+            templatename = request.args.get("template")
+        )
         return Response(
-            "Invalid format, template formats are mustache, handlebars or jinja",
+            dorender(
+                template = template, 
+                format = format, 
+                data = doquery(
+                    query = resolvequery(
+                        queryname = request.args.get("query")
+                    ), 
+                    params = request.args
+                ), 
+            ), 
+            mimetype='application/text'
+        )
+    except Exception as e:
+        return Response(
+            str(e),
             status=400,
         )
+
+@app.route('/view', methods=['GET'])
+def view():
+    from flask import request
+    import simplejson as json
+    try:
+        (query, template, format) = resolveview(
+            viewname = request.args.get("view")
+        )
+        (template, format) = resolvetemplate(
+            templatename = template["name"], 
+            template = template["template"], 
+            format = template["format"], 
+        )
+        return Response(
+            dorender(
+                template = template, 
+                format = format, 
+                data = doquery(
+                    query = resolvequery(
+                        queryname = query["name"], 
+                        query = query["query"]
+                    ), 
+                    params = request.args
+                ), 
+            ), 
+            mimetype='application/text'
+        )
+    except Exception as e:
+        return Response(
+            str(e),
+            status=400,
+        )
+
+# 
+# 
+# 
+def resolvequery(queryname, query = None):
+
+    if not queryname and not query:
+        # return Response(
+        #     "Unable to read query, please pass a valid query",
+        #     status=400,
+        # )
+        raise GFSError("Unable to read query, please pass a valid query")
+
+    if queryname:
+        try:
+            queryquery = """
+                query queryquery {
+                    queries(
+                        name: "%s"
+                    ) {
+                        name, 
+                        query
+                    }
+                }
+            """ % (
+                queryname
+            )
+            querydata = gqlClient.gqlexec(
+                queryquery,
+                {
+                }
+            )
+            if querydata and \
+                "data" in querydata and \
+                "queries" in querydata["data"] and \
+                querydata["data"]["queries"] and len(querydata["data"]["queries"]) > 0 :
+                query = querydata["data"]["queries"][0]["query"]
+            
+        except Exception as e:
+            # return Response(
+            #     # "Query error: " + str(e.response.json()),
+            #     str(e),
+            #     status=400,
+            # )
+            raise
 
     if not query:
-        return Response(
-            "Unable to read query, please pass a valid query",
-            status=400,
-        )
+        # return Response(
+        #     "Unable to read query, please pass a valid query",
+        #     status=400,
+        # )
+        raise GFSError("Unable to read query, please pass a valid query")
 
-    if not template:
-        return Response(
-            "Unable to read template, please pass a valid template, format is set to " + str(format),
-            status=400,
-        )
+    return query
 
-    if context:
+# 
+# 
+# 
+def resolvetemplate(templatename, template = None, format = "mustache"):
+
+    if not templatename and not template:
+        # return Response(
+        #     "Unable to read template, please pass a valid template, format is set to " + str(format),
+        #     status=400,
+        # )
+        raise GFSError("Unable to read template, please pass a valid template, format is set to " + str(format))
+
+    if templatename:
         try:
-            context = json.loads(
-                context
+            templatequery = """
+                query templatequery {
+                    templates(
+                        name: "%s"
+                    ) {
+                        name, 
+                        template, 
+                        format
+                    }
+                }
+            """ % (
+                templatename
             )
+            templatedata = gqlClient.gqlexec(
+                templatequery,
+                {
+                }
+            )
+            if templatedata and \
+                "data" in templatedata and \
+                "templates" in templatedata["data"] and \
+                templatedata["data"]["templates"] and len(templatedata["data"]["templates"]) > 0 :
+                template = templatedata["data"]["templates"][0]["template"]
+                format = templatedata["data"]["templates"][0]["format"]
+                if not format:
+                    format = "mustache"
+            
         except Exception as e:
-            return Response(
-                "Unable to read context, if you want to pass an additional render context please pass valid JSON",
-                status=400,
+            # return Response(
+            #     # "Query error: " + str(e.response.json()),
+            #     str(e),
+            #     status=400,
+            # )
+            raise
+
+    return (template, format)
+
+# 
+# 
+# 
+def resolveview(viewname):
+
+    query = None
+    template = None
+    partials = []
+
+    if viewname:
+        try:
+            viewquery = """
+                query viewquery {
+                    views(
+                        name: "%s"
+                    ) {
+                        name,
+                        query {
+                            name,
+                            query
+                        },
+                        template {
+                            name,
+                            template,
+                            format
+                        }
+                        partials {
+                            name,
+                            template,
+                            format
+                        }
+                    }
+                }
+            """ % (
+                viewname
             )
+            querydata = gqlClient.gqlexec(
+                viewquery,
+                {
+                }
+            )
+            if querydata and \
+                "data" in querydata and \
+                "views" in querydata["data"] and \
+                querydata["data"]["views"] and len(querydata["data"]["views"]) > 0 :
+                view = querydata["data"]["views"][0]
+
+                query = querydata["data"]["views"][0]["query"]
+                template = querydata["data"]["views"][0]["template"]
+                partials = querydata["data"]["views"][0]["partials"]
+
+        except Exception as e:
+            # return Response(
+            #     # "Query error: " + str(e.response.json()),
+            #     str(e),
+            #     status=400,
+            # )
+            raise
+
+    return (query, template, partials)
+
+# 
+# 
+# 
+def doquery(query, params = {}):
 
     data = {}
     try:
         data = gqlClient.gqlexec(
             query,
-            {
-            }
+            params
         )
     except Exception as e:
-        return Response(
-            # "GQL GraphQL error " + str(e.response.json()),
-            str(e),
-            status=400,
-        )
+        # return Response(
+        #     # "Query error: " + str(e.response.json()),
+        #     str(e),
+        #     status=400,
+        # )
+        raise
 
     if not data:
         data = {}
+
+    return data
+
+# 
+# 
+# 
+def dorender(template, format = "mustache", data = {}):
+
+    if format not in ["mustache", "handlebars", "jinja"]:
+        # return Response(
+        #     "Invalid format, template formats are mustache, handlebars or jinja",
+        #     status=400,
+        # )
+        raise GFSError("Invalid format, template formats are mustache, handlebars or jinja")
 
     if format == "jinja":
         from jinja2 import Template
         t1 = Template(
             template
         )
-        return Response(
-            t1.render(
-                data
-            ), 
-            mimetype='application/text'
+        # return Response(
+        return t1.render(
+            data
         )
+        # , 
+        #     mimetype='application/text'
+        # )
 
     elif format == "handlebars":
         pass
 
     else:
         import pystache
-        return Response(
-            pystache.render(
-                template,
-                data, 
-            ), 
-            mimetype='application/text'
+        # return Response(
+        return pystache.render(
+            template,
+            data, 
         )
-
-# 
-# 
-# 
-
-@app.route('/dhcpquery')
-def dhcpquery():
-    queryfile = open("/app/src/py/dhcp/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    return Response(
-        query, 
-        mimetype='application/text'
-    )
-
-@app.route('/dhcptemplate')
-def dhcptemplate():
-    templatefile = open("/app/src/py/dhcp/" + str(MUSTACHETEMPLATE), "r")
-    template = templatefile.read()
-    return Response(
-        template, 
-        mimetype='application/text'
-    )
-
-@app.route('/rundhcpquery')
-def rundhcpquery():
-    queryfile = open("/app/src/py/dhcp/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    import simplejson as json
-    return Response(
-        json.dumps(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-            indent=2, 
-            sort_keys=False
-        ), 
-        mimetype='application/json'
-    )
-
-@app.route('/dhcp')
-def dhcp():
-    queryfile = open("/app/src/py/dhcp/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    templatefile = open("/app/src/py/dhcp/" + str(MUSTACHETEMPLATE), "r")
-    template = templatefile.read()
-    import pystache
-    return Response(
-        pystache.render(
-            template,
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-        ), 
-        mimetype='application/text'
-    )
-
-# 
-# 
-# 
-
-@app.route('/ipxedhcpquery')
-def ipxedhcpquery():
-    queryfile = open("./src/py/ipxedhcp/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    return Response(
-        query, 
-        mimetype='application/text'
-    )
-
-@app.route('/ipxedhcptemplate')
-def ipxedhcptemplate():
-    templatefile = open("./src/py/ipxedhcp/" + str(MUSTACHETEMPLATE), "r")
-    template = templatefile.read()
-    return Response(
-        template, 
-        mimetype='application/text'
-    )
-
-@app.route('/runipxedhcpquery')
-def runipxedhcpquery():
-    queryfile = open("./src/py/ipxedhcp/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    import simplejson as json
-    return Response(
-        json.dumps(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-            indent=2, 
-            sort_keys=False
-        ), 
-        mimetype='application/json'
-    )
-
-@app.route('/ipxedhcp')
-def ipxedhcp():
-    queryfile = open("./src/py/ipxedhcp/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    templatefile = open("./src/py/ipxedhcp/" + str(MUSTACHETEMPLATE), "r")
-    template = templatefile.read()
-    import pystache
-    return Response(
-        pystache.render(
-            template,
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-        ), 
-        mimetype='application/text'
-    )
-
-# 
-# 
-# 
-
-@app.route('/dnsquery')
-def dnsquery():
-    queryfile = open("/app/src/py/dns/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    return Response(
-        query, 
-        mimetype='application/text'
-    )
-
-@app.route('/dnstemplate')
-def dnstemplate():
-    templatefile = open("/app/src/py/dns/" + str(MUSTACHETEMPLATE), "r")
-    template = templatefile.read()
-    return Response(
-        template, 
-        mimetype='application/text'
-    )
-
-@app.route('/rundnsquery')
-def rundnsquery():
-    queryfile = open("/app/src/py/dns/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    import simplejson as json
-    return Response(
-        json.dumps(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-            indent=2, 
-            sort_keys=False
-        ), 
-        mimetype='application/json'
-    )
-
-@app.route('/dns')
-def dns():
-    queryfile = open("/app/src/py/dns/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    templatefile = open("/app/src/py/dns/" + str(MUSTACHETEMPLATE), "r")
-    template = templatefile.read()
-    import pystache
-    return Response(
-        pystache.render(
-            template,
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-        ), 
-        mimetype='application/text'
-    )
-
-# 
-# 
-# 
-
-@app.route('/bindconfquery')
-def bindconfquery():
-    queryfile = open("/app/src/py/bindconf/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    return Response(
-        query, 
-        mimetype='application/text'
-    )
-
-@app.route('/bindconftemplate')
-def bindconftemplate():
-    templatefile = open("/app/src/py/bindconf/" + str(MUSTACHETEMPLATE), "r")
-    template = templatefile.read()
-    return Response(
-        template, 
-        mimetype='application/text'
-    )
-
-@app.route('/runbindconfquery')
-def runbindconfquery():
-    queryfile = open("/app/src/py/bindconf/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    import simplejson as json
-    return Response(
-        json.dumps(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-            indent=2, 
-            sort_keys=False
-        ), 
-        mimetype='application/json'
-    )
-
-@app.route('/bindconf')
-def bindconf():
-    queryfile = open("/app/src/py/bindconf/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    templatefile = open("/app/src/py/bindconf/" + str(MUSTACHETEMPLATE), "r")
-    template = templatefile.read()
-    import pystache
-    return Response(
-        pystache.render(
-            template,
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-        ), 
-        mimetype='application/text'
-    )
-
-# 
-# 
-# 
-
-@app.route('/bindzonequery')
-def bindzonequery():
-    queryfile = open("/app/src/py/bindzone/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    return Response(
-        query, 
-        mimetype='application/text'
-    )
-
-@app.route('/bindzonetemplate')
-def bindzonetemplate():
-    templatefile = open("/app/src/py/bindzone/" + str(MUSTACHETEMPLATE), "r")
-    template = templatefile.read()
-    return Response(
-        template, 
-        mimetype='application/text'
-    )
-
-@app.route('/runbindzonequery')
-def runbindzonequery():
-    queryfile = open("/app/src/py/bindzone/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    import simplejson as json
-    return Response(
-        json.dumps(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-            indent=2, 
-            sort_keys=False
-        ), 
-        mimetype='application/json'
-    )
-
-@app.route('/bindzone')
-def bindzone():
-    queryfile = open("/app/src/py/bindzone/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    templatefile = open("/app/src/py/bindzone/" + str(MUSTACHETEMPLATE), "r")
-    template = templatefile.read()
-    import datetime
-    from datetime import datetime
-    import pystache
-    context = gqlClient.gqlexec(
-        query,
-        {
-        }
-    )
-    # now = datetime.date.today()
-    now = datetime.now() # current date and time
-    # year = now.year
-    year = now.strftime("%Y")
-    # year = now.strftime("%y")
-    month = now.strftime("%m")
-    day = now.strftime("%d")
-    hour = now.strftime("%H")
-    min = now.strftime("%M")
-    sec = now.strftime("%S")
-    context["year"] = str(year)
-    context["month"] = str(month)
-    context["day"] = str(day)
-    context["hour"] = str(hour)
-    context["min"] = str(min)
-    context["sec"] = str(sec)
-    # serial can not go above 32bit, so we get an overflow with the below
-    # context["incr"] = str( (int(hour) * 60 * 60) + (int(min) * 60) + int(sec) )
-    # we have 2 digits for the increment, lets condense hour and mins into 0 to 99
-    # 23 * 60 + 60 = 1440 minutes per day
-    # 0 to 99 max -> 1440 / 1440 * 99 = 99
-    # serial = ( h * 60 + s ) / 1440 * 99
-    # serial ( 11 * 60 + 25 ) / 1440 * 99 = 47
-    context["incr"] = str(int((((int(hour) * 60) + int(min)) / 1440) * 90))
-    return pystache.render(
-        template,
-        # gqlClient.gqlexec(
-        #     query,
-        #     {
-        #     }
-        # ),
-        context
-    )
-
-# 
-# 
-# 
-
-@app.route('/hostsquery')
-def hostsquery():
-    queryfile = open("/app/src/py/hosts/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    return Response(
-        query, 
-        mimetype='application/text'
-    )
-
-@app.route('/hoststemplate')
-def hoststemplate():
-    templatefile = open("/app/src/py/hosts/" + str(JINJATEMPLATE), "r")
-    template = templatefile.read()
-    return Response(
-        template, 
-        mimetype='application/text'
-    )
-
-@app.route('/runhostsquery')
-def runhostsquery():
-    queryfile = open("/app/src/py/hosts/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    import simplejson as json
-    return Response(
-        json.dumps(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-            indent=2, 
-            sort_keys=False
-        ), 
-        mimetype='application/json'
-    )
-
-@app.route('/hosts')
-def hosts():
-    queryfile = open("/app/src/py/hosts/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    templatefile = open("/app/src/py/hosts/" + str(JINJATEMPLATE), "r")
-    template = templatefile.read()
-    # import pystache
-    # return pystache.render(
-    #     template,
-    #     gqlClient.gqlexec(
-    #         query,
-    #         {
-    #         }
-    #     ), 
-    # )
-    from jinja2 import Template
-    t1 = Template(
-       template
-    )
-    return Response(
-        t1.render(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            )
-        ), 
-        mimetype='application/text'
-    )
-
-# 
-# 
-# 
-
-@app.route('/sshquery')
-def sshquery():
-    queryfile = open("/app/src/py/ssh/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    return Response(
-        query, 
-        mimetype='application/text'
-    )
-
-@app.route('/sshtemplate')
-def sshtemplate():
-    templatefile = open("/app/src/py/ssh/" + str(JINJATEMPLATE), "r")
-    template = templatefile.read()
-    return Response(
-        template, 
-        mimetype='application/text'
-    )
-
-@app.route('/runsshsquery')
-def runsshquery():
-    queryfile = open("/app/src/py/ssh/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    import simplejson as json
-    return Response(
-        json.dumps(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-            indent=2, 
-            sort_keys=False
-        ), 
-        mimetype='application/json'
-    )
-
-@app.route('/ssh')
-def ssh():
-    queryfile = open("/app/src/py/ssh/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    templatefile = open("/app/src/py/ssh/" + str(JINJATEMPLATE), "r")
-    template = templatefile.read()
-    # import pystache
-    # return pystache.render(
-    #     template,
-    #     gqlClient.gqlexec(
-    #         query,
-    #         {
-    #         }
-    #     ), 
-    # )
-    from jinja2 import Template
-    t1 = Template(
-       template
-    )
-    return Response(
-        t1.render(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            )
-        ), 
-        mimetype='application/text'
-    )
-
-# 
-# 
-# 
-
-@app.route('/httpquery')
-def httpquery():
-    queryfile = open("/app/src/py/http/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    return Response(
-        query, 
-        mimetype='application/text'
-    )
-
-@app.route('/httptemplate')
-def httptemplate():
-    templatefile = open("/app/src/py/http/" + str(JINJATEMPLATE), "r")
-    template = templatefile.read()
-    return Response(
-        template, 
-        mimetype='application/text'
-    )
-
-@app.route('/httpquery')
-def runhttpquery():
-    queryfile = open("/app/src/py/http/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    import simplejson as json
-    return Response(
-        json.dumps(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-            indent=2, 
-            sort_keys=False
-        ), 
-        mimetype='application/json'
-    )
-
-@app.route('/http')
-def http():
-    queryfile = open("/app/src/py/http/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    templatefile = open("/app/src/py/http/" + str(JINJATEMPLATE), "r")
-    template = templatefile.read()
-    # import pystache
-    # return pystache.render(
-    #     template,
-    #     gqlClient.gqlexec(
-    #         query,
-    #         {
-    #         }
-    #     ), 
-    # )
-    from jinja2 import Template
-    t1 = Template(
-       template
-    )
-    return Response(
-        t1.render(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            )
-        ), 
-        mimetype='application/text'
-    )
-
-# 
-# 
-# 
-
-@app.route('/bootdsquery')
-def bootdsquery():
-    queryfile = open("/app/src/py/bootds/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    return Response(
-        query, 
-        mimetype='application/text'
-    )
-
-@app.route('/bootdstemplate')
-def bootdstemplate():
-    templatefile = open("/app/src/py/bootds/" + str(JINJATEMPLATE), "r")
-    template = templatefile.read()
-    return Response(
-        template, 
-        mimetype='application/text'
-    )
-
-@app.route('/runbootdsquery')
-def runbootdsquery():
-    queryfile = open("/app/src/bootds/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    import simplejson as json
-    return Response(
-        json.dumps(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-            indent=2, 
-            sort_keys=False
-        ), 
-        mimetype='application/json'
-    )
-
-@app.route('/bootds')
-def bootds():
-    queryfile = open("/app/src/bootds/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    templatefile = open("/app/src/bootds/" + str(JINJATEMPLATE), "r")
-    template = templatefile.read()
-    # import pystache
-    # return pystache.render(
-    #     template,
-    #     gqlClient.gqlexec(
-    #         query,
-    #         {
-    #         }
-    #     ), 
-    # )
-    from jinja2 import Template
-    t1 = Template(
-       template
-    )
-    return Response(
-        t1.render(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            )
-        ), 
-        mimetype='application/json'
-    )
-
-# 
-# 
-# 
-
-@app.route('/installimgsquery')
-def installimgsquery():
-    queryfile = open("./src/py/installimgs/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    return Response(
-        query, 
-        mimetype='application/text'
-    )
-
-@app.route('/installimgstemplate')
-def installimgstemplate():
-    templatefile = open("./src/py/installimgs/" + str(JINJATEMPLATE), "r")
-    template = templatefile.read()
-    return Response(
-        template, 
-        mimetype='application/text'
-    )
-
-@app.route('/runinstallimgsquery')
-def runinstallimgsquery():
-    queryfile = open("./src/py/installimgs/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    import simplejson as json
-    return Response(
-        json.dumps(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            ), 
-            indent=2, 
-            sort_keys=False
-        ), 
-        mimetype='application/json'
-    )
-
-@app.route('/installimgs')
-def installimgs():
-    queryfile = open("./src/py/installimgs/" + str(GRAPHQLQUERY), "r")
-    query = queryfile.read()
-    templatefile = open("./src/py/installimgs/" + str(JINJATEMPLATE), "r")
-    template = templatefile.read()
-    # import pystache
-    # return pystache.render(
-    #     template,
-    #     gqlClient.gqlexec(
-    #         query,
-    #         {
-    #         }
-    #     ), 
-    # )
-    from jinja2 import Template
-    t1 = Template(
-       template
-    )
-    return Response(
-        t1.render(
-            gqlClient.gqlexec(
-                query,
-                {
-                }
-            )
-        ), 
-        mimetype='application/json'
-    )
+        # , 
+        #     mimetype='application/text'
+        # )
 
 # 
 # 
@@ -864,4 +392,13 @@ def installimgs():
 
 if __name__ == '__main__':
     # socketio.run(app, host=LISTENERADDR, port=LISTENERPORT)
-    socketio.run(app, host=str(listen_addr), port=int(listen_port))
+    # 
+    # TODO: I need to fix this
+    # RuntimeError: The Werkzeug web server is not designed to run in production. Pass allow_unsafe_werkzeug=True to the run() method to disable this error.
+    # 
+    socketio.run(
+        app, 
+        host=str(listen_addr), 
+        port=int(listen_port), 
+        # allow_unsafe_werkzeug=True
+    )
