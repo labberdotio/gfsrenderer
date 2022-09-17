@@ -12,18 +12,16 @@ addict
 
 PyYAML
 ruamel.yaml==0.17.21
-# pystache
+pystache
 # flask
-# Flask==1.1.1
-Flask==2.1.2
+Flask==1.1.1
 flask-blueprint
 Flask-RESTful
 flask-cors
 flask-swagger
 flask-socketio
 Flask-Sockets==0.2.1
-# gevent==1.4.0
-gevent==1.5.0
+gevent==1.4.0
 gevent-websocket==0.10.1
 # 
 # TypeError: an integer is required (got type bytes)
@@ -35,7 +33,7 @@ gevent-websocket==0.10.1
 # > pip freeze
 # pyspark==3.3.0
 # 
-pyspark==3.3.0
+# pyspark==3.3.0
 # Flask import error
 # ImportError: cannot import name 'escape' from 'jinja2'
 # Jinja2==3.1.1
@@ -65,9 +63,7 @@ graphql-server-core==1.1.1
 # graphql-ws==0.3.0
 graphql-ws==0.3.1
 
-# Werkzeug==0.15.5
-# Werkzeug==2.0.0
-Werkzeug==2.1.2
+Werkzeug==0.15.5
 
 # Rx==3.1.1
 Rx==1.6.1
