@@ -15,7 +15,10 @@ from python_graphql_client import GraphqlClient
 class GFSGQLError(Exception):
 
     def __init__(self, error):
-        pass
+        self.error = error
+
+    def __str__(self):
+        return str(self.error)
 
 
 
