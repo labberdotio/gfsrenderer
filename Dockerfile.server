@@ -1,0 +1,61 @@
+
+# 
+# https://runnable.com/docker/python/dockerize-your-flask-application
+# 
+# > docker build -t gfsrenderer:latest -f Dockerfile.server .
+# > docker network create -d bridge gremlinfs
+# > docker run -d -e ... --net=gremlinfs -p 5000:5000 gfsrenderer:latest
+# 
+
+# 
+# Alpine latest installs python 3.8, we need 3.6
+# 
+# FROM alpine:latest
+FROM alpine:3.9
+
+# ENV
+ENV LISTEN_ADDR="0.0.0.0"
+ENV LISTEN_PORT="5000"
+ENV GFS_HOST="gfsapi"
+ENV GFS_PORT="5000"
+# ENV GFS_USERNAME="root"
+# ENV GFS_PASSWORD="root"
+ENV KAFKA_HOST="kafka"
+ENV KAFKA_PORT="9092"
+# ENV KAFKA_USERNAME="kafka"
+# ENV KAFKA_PASSWORD="kafka"
+
+USER root
+
+RUN apk update
+
+# c/_cffi_backend.c:15:10: fatal error: ffi.h: No such file or directory
+# #include <ffi.h>
+Run apk add --update libffi-dev
+
+# Install python
+# RUN apk add --update \
+#     python3 \
+#     python3-dev \
+#     py-pip \
+#     build-base \
+#   && pip install virtualenv \
+#   && rm -rf /var/cache/apk/*
+RUN apk add --update \
+    python3 \
+    python3-dev \
+    py-pip \
+    build-base \
+  && rm -rf /var/cache/apk/*
+
+ADD ./server/ /app
+
+WORKDIR /app
+
+# Addl. python 
+# RUN pip install -r ./requirements.txt
+RUN pip3 install -r ./requirements.txt
+
+ENTRYPOINT [ "python3" ]
+
+CMD [ "./src/py/server.py" ]
