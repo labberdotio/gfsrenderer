@@ -169,6 +169,20 @@ def resolvequery(queryname, query = None):
         # )
         raise GFSError("Unable to read query, please pass a valid query")
 
+    # File
+    if queryname:
+        try:
+            queryfile = open("/data/queries/" + str(queryname) + "." + "graphql", "r")
+            query = queryfile.read()
+            return query
+        except Exception as e:
+            # return Response(
+            #     # "Query error: " + str(e.response.json()),
+            #     str(e),
+            #     status=400,
+            # )
+            raise
+
     if queryname:
         try:
             queryquery = """
@@ -222,6 +236,20 @@ def resolvetemplate(templatename, template = None, format = "mustache"):
         #     status=400,
         # )
         raise GFSError("Unable to read template, please pass a valid template, format is set to " + str(format))
+
+        # File
+    if templatename:
+        try:
+            templatefile = open("/data/templates/" + str(templatename) + "." + format, "r")
+            template = templatefile.read()
+            return (template, format)
+        except Exception as e:
+            # return Response(
+            #     # "Query error: " + str(e.response.json()),
+            #     str(e),
+            #     status=400,
+            # )
+            raise
 
     if templatename:
         try:
