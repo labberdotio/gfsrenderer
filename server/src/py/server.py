@@ -172,7 +172,8 @@ def resolvequery(queryname, query = None):
     # File
     if queryname:
         try:
-            queryfile = open("/data/queries/" + str(queryname) + "." + "graphql", "r")
+            # queryfile = open("/data/queries/" + str(queryname) + "." + "graphql", "r")
+            queryfile = open("/data/" + str(queryname) + "." + "graphql", "r")
             query = queryfile.read()
             return query
         except Exception as e:
@@ -240,7 +241,8 @@ def resolvetemplate(templatename, template = None, format = "mustache"):
         # File
     if templatename:
         try:
-            templatefile = open("/data/templates/" + str(templatename) + "." + format, "r")
+            # templatefile = open("/data/templates/" + str(templatename) + "." + format, "r")
+            templatefile = open("/data/" + str(templatename) + "." + format, "r")
             template = templatefile.read()
             return (template, format)
         except Exception as e:
