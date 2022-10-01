@@ -13,6 +13,8 @@ addict
 PyYAML
 ruamel.yaml==0.17.21
 pystache
+# pybars
+pybars3
 # flask
 Flask==1.1.1
 flask-blueprint

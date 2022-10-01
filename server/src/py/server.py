@@ -102,8 +102,11 @@ def render():
     from flask import request
     import simplejson as json
     try:
+        # (templatename, template = None, format = "mustache"):
         (template, format) = resolvetemplate(
-            templatename = request.args.get("template")
+            templatename = request.args.get("template"), 
+            template = None, 
+            format = request.args.get("format", "mustache")
         )
         return Response(
             dorender(
@@ -169,6 +172,21 @@ def resolvequery(queryname, query = None):
         # )
         raise GFSError("Unable to read query, please pass a valid query")
 
+    # File
+    if queryname:
+        try:
+            # queryfile = open("/data/queries/" + str(queryname) + "." + "graphql", "r")
+            queryfile = open("/data/" + str(queryname) + "." + "graphql", "r")
+            query = queryfile.read()
+            return query
+        except Exception as e:
+            # return Response(
+            #     # "Query error: " + str(e.response.json()),
+            #     str(e),
+            #     status=400,
+            # )
+            raise
+
     if queryname:
         try:
             queryquery = """
@@ -222,6 +240,21 @@ def resolvetemplate(templatename, template = None, format = "mustache"):
         #     status=400,
         # )
         raise GFSError("Unable to read template, please pass a valid template, format is set to " + str(format))
+
+        # File
+    if templatename:
+        try:
+            # templatefile = open("/data/templates/" + str(templatename) + "." + format, "r")
+            templatefile = open("/data/" + str(templatename) + "." + format, "r")
+            template = templatefile.read()
+            return (template, format)
+        except Exception as e:
+            # return Response(
+            #     # "Query error: " + str(e.response.json()),
+            #     str(e),
+            #     status=400,
+            # )
+            raise
 
     if templatename:
         try:
@@ -344,7 +377,41 @@ def doquery(query, params = {}):
     if not data:
         data = {}
 
-    return data
+    # 
+    # BIND DNS serial
+    # 
+    context = data
+
+    import datetime
+    from datetime import datetime
+
+    # now = datetime.date.today()
+    now = datetime.now() # current date and time
+    # year = now.year
+    year = now.strftime("%Y")
+    # year = now.strftime("%y")
+    month = now.strftime("%m")
+    day = now.strftime("%d")
+    hour = now.strftime("%H")
+    min = now.strftime("%M")
+    sec = now.strftime("%S")
+    context["year"] = str(year)
+    context["month"] = str(month)
+    context["day"] = str(day)
+    context["hour"] = str(hour)
+    context["min"] = str(min)
+    context["sec"] = str(sec)
+    # serial can not go above 32bit, so we get an overflow with the below
+    # context["incr"] = str( (int(hour) * 60 * 60) + (int(min) * 60) + int(sec) )
+    # we have 2 digits for the increment, lets condense hour and mins into 0 to 99
+    # 23 * 60 + 60 = 1440 minutes per day
+    # 0 to 99 max -> 1440 / 1440 * 99 = 99
+    # serial = ( h * 60 + s ) / 1440 * 99
+    # serial ( 11 * 60 + 25 ) / 1440 * 99 = 47
+    context["incr"] = str(int((((int(hour) * 60) + int(min)) / 1440) * 90))
+
+    # return data
+    return context
 
 # 
 # 
@@ -372,9 +439,17 @@ def dorender(template, format = "mustache", data = {}):
         # )
 
     elif format == "handlebars":
-        pass
+        from pybars import Compiler
+        compiler = Compiler()
+        template = compiler.compile(template)
+        # return Response(
+        return template(data)
+        # , 
+        #     mimetype='application/text'
+        # )
 
     else:
+
         import pystache
         # return Response(
         return pystache.render(
@@ -384,6 +459,23 @@ def dorender(template, format = "mustache", data = {}):
         # , 
         #     mimetype='application/text'
         # )
+
+        # 
+        # This seemed to have issues
+        # 
+        # I'm cheating here, I believe the handlebars syntax is a derivative of mustache, 
+        # which should mean that mustache templates should be renderable by a handlebars renderer.
+        # I have too many mustache templates that need handlebars looping to handle Item1,Item2 type
+        # of output
+        # 
+        # from pybars import Compiler
+        # compiler = Compiler()
+        # template = compiler.compile(template)
+        # # return Response(
+        # return template(data)
+        # # , 
+        # #     mimetype='application/text'
+        # # )
 
 # 
 # 
