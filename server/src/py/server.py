@@ -405,9 +405,17 @@ def dorender(template, format = "mustache", data = {}):
         # )
 
     elif format == "handlebars":
-        pass
+        from pybars import Compiler
+        compiler = Compiler()
+        template = compiler.compile(template)
+        # return Response(
+        return template(data)
+        # , 
+        #     mimetype='application/text'
+        # )
 
     else:
+
         import pystache
         # return Response(
         return pystache.render(
@@ -417,6 +425,23 @@ def dorender(template, format = "mustache", data = {}):
         # , 
         #     mimetype='application/text'
         # )
+
+        # 
+        # This seemed to have issues
+        # 
+        # I'm cheating here, I believe the handlebars syntax is a derivative of mustache, 
+        # which should mean that mustache templates should be renderable by a handlebars renderer.
+        # I have too many mustache templates that need handlebars looping to handle Item1,Item2 type
+        # of output
+        # 
+        # from pybars import Compiler
+        # compiler = Compiler()
+        # template = compiler.compile(template)
+        # # return Response(
+        # return template(data)
+        # # , 
+        # #     mimetype='application/text'
+        # # )
 
 # 
 # 
