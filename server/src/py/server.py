@@ -377,7 +377,41 @@ def doquery(query, params = {}):
     if not data:
         data = {}
 
-    return data
+    # 
+    # BIND DNS serial
+    # 
+    context = data
+
+    import datetime
+    from datetime import datetime
+
+    # now = datetime.date.today()
+    now = datetime.now() # current date and time
+    # year = now.year
+    year = now.strftime("%Y")
+    # year = now.strftime("%y")
+    month = now.strftime("%m")
+    day = now.strftime("%d")
+    hour = now.strftime("%H")
+    min = now.strftime("%M")
+    sec = now.strftime("%S")
+    context["year"] = str(year)
+    context["month"] = str(month)
+    context["day"] = str(day)
+    context["hour"] = str(hour)
+    context["min"] = str(min)
+    context["sec"] = str(sec)
+    # serial can not go above 32bit, so we get an overflow with the below
+    # context["incr"] = str( (int(hour) * 60 * 60) + (int(min) * 60) + int(sec) )
+    # we have 2 digits for the increment, lets condense hour and mins into 0 to 99
+    # 23 * 60 + 60 = 1440 minutes per day
+    # 0 to 99 max -> 1440 / 1440 * 99 = 99
+    # serial = ( h * 60 + s ) / 1440 * 99
+    # serial ( 11 * 60 + 25 ) / 1440 * 99 = 47
+    context["incr"] = str(int((((int(hour) * 60) + int(min)) / 1440) * 90))
+
+    # return data
+    return context
 
 # 
 # 
