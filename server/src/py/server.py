@@ -102,8 +102,11 @@ def render():
     from flask import request
     import simplejson as json
     try:
+        # (templatename, template = None, format = "mustache"):
         (template, format) = resolvetemplate(
-            templatename = request.args.get("template")
+            templatename = request.args.get("template"), 
+            template = None, 
+            format = request.args.get("format", "mustache")
         )
         return Response(
             dorender(
