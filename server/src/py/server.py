@@ -130,12 +130,15 @@ def render():
         )
 
 @app.route('/view', methods=['GET'])
-def view():
+@app.route('/view/<path:view>', methods=['GET'])
+def view(view = None):
     from flask import request
     import simplejson as json
+    if not view:
+        view = request.args.get("view")
     try:
         (query, template, format, viewmime) = resolveview(
-            viewname = request.args.get("view")
+            viewname = view # request.args.get("view")
         )
         if not viewmime:
             viewmime = 'application/text'
@@ -156,7 +159,7 @@ def view():
                         queryname = query["name"], 
                         query = query["query"]
                     ), 
-                    params = request.args
+                    params = request.args.to_dict() # flat=False)
                 ), 
             ), 
             mimetype=viewmime # 'application/text'
@@ -178,6 +181,9 @@ def resolvequery(queryname, query = None):
         #     status=400,
         # )
         raise GFSError("Unable to read query, please pass a valid query")
+
+    if query:
+        return query
 
     # File
     if queryname:
@@ -249,6 +255,9 @@ def resolvetemplate(templatename, template = None, format = "mustache", mime = '
         #     status=400,
         # )
         raise GFSError("Unable to read template, please pass a valid template, format is set to " + str(format))
+
+    if template and format:
+       return (template, format, mime) 
 
         # File
     if templatename:
