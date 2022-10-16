@@ -2,6 +2,15 @@
 import os
 import sys
 
+import logging
+logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.DEBUG)
+
+import traceback
+
+import time
+from datetime import datetime
+
 import asyncio
 
 from flask import Flask
@@ -56,6 +65,8 @@ gqlClient = GFSGQL(
     gfs_password = gfs_password,
 )
 
+
+
 # 
 # GFS DAO error class
 # 
@@ -67,17 +78,80 @@ class GFSError(Exception):
     def __str__(self):
         return str(self.error)
 
+
+
+class GFSLogger():
+
+    @classmethod
+    def getLogger(self, name):
+        return GFSLogger(name)
+
+    @classmethod
+    def getLogLevel(self):
+        return None
+
+    def __init__(self, name, **kwargs):
+        self._name = name
+        self._logger = logging.getLogger(name)
+
+    def enter(self, message):
+        start = time.time() # datetime.now()
+        # self._logger.debug("ENTER: " + message)
+        return start
+        # pass
+
+    def exit(self, message, start):
+        end = time.time()
+        diff = ( end - start ) * 1000
+        # addstat(self._name + ": " + message, diff)
+        # if diff > 250.0:
+        #     self._logger.warning("EXIT: " + message + " AFTER " + str( diff ) + " MS " )
+        #     for nme in allcalls:
+        #         if alltimes[nme] > 1000.0:
+        #             # print(" >> STAT: " + nme + ", calls: " + str(allcalls[nme]) + ", time: " + str(alltimes[nme]))
+        #             self._logger.warning(" >> STAT: " + nme + ", calls: " + str(allcalls[nme]) + ", time: " + str(alltimes[nme]))
+        # 
+        # else:
+        self._logger.debug("EXIT: " + message + " AFTER " + str( diff ) + " MS " )
+        return diff
+        # pass
+
+    def debug(self, *args, **kwargs):
+        self._logger.debug(*args, **kwargs)
+
+    def info(self, *args, **kwargs):
+        self._logger.info(*args, **kwargs)
+
+    def warning(self, *args, **kwargs):
+        self._logger.warning(*args, **kwargs)
+
+    def error(self, *args, **kwargs):
+        self._logger.error(*args, **kwargs)
+
+    def critical(self, *args, **kwargs):
+        self._logger.critical(*args, **kwargs)
+
+    def exception(self, *args, **kwargs):
+        self._logger.exception(*args, **kwargs)
+
+    def log(self, lvl, *args, **kwargs):
+        self._logger.log(lvl, *args, **kwargs)
+
 # 
 # 
 # 
+
+logger = GFSLogger.getLogger("GFSRenderer")
 
 # @app.route('/query', methods=['GET', 'POST'])
 @app.route('/query', methods=['GET'])
 def query():
     from flask import request
     import simplejson as json
+    etime = logger.enter("query")
     try:
-        return Response(
+        # return 
+        ret = Response(
             json.dumps(
                 doquery(
                     resolvequery(
@@ -90,7 +164,10 @@ def query():
             ), 
             mimetype='application/json'
         )
+        logger.exit("models", etime)
+        return ret
     except Exception as e:
+        logger.exit("models", etime)
         return Response(
             str(e),
             status=400,
@@ -101,6 +178,7 @@ def query():
 def render():
     from flask import request
     import simplejson as json
+    etime = logger.enter("render")
     try:
         # (templatename, template = None, format = "mustache"):
         (template, format, mime) = resolvetemplate(
@@ -110,7 +188,8 @@ def render():
         )
         if not mime:
             mime = 'application/text'
-        return Response(
+        # return 
+        ret = Response(
             dorender(
                 template = template, 
                 format = format, 
@@ -123,7 +202,10 @@ def render():
             ), 
             mimetype=mime # 'application/text'
         )
+        logger.exit("render", etime)
+        return ret
     except Exception as e:
+        logger.exit("render", etime)
         return Response(
             str(e),
             status=400,
@@ -134,6 +216,7 @@ def render():
 def view(view = None):
     from flask import request
     import simplejson as json
+    etime = logger.enter("query")
     if not view:
         view = request.args.get("view")
     try:
@@ -150,7 +233,8 @@ def view(view = None):
         )
         if not templatemime:
             templatemime = 'application/text'
-        return Response(
+        # return 
+        ret = Response(
             dorender(
                 template = template, 
                 format = format, 
@@ -164,7 +248,10 @@ def view(view = None):
             ), 
             mimetype=viewmime # 'application/text'
         )
+        logger.exit("view", etime)
+        return ret
     except Exception as e:
+        logger.exit("view", etime)
         return Response(
             str(e),
             status=400,
@@ -174,6 +261,7 @@ def view(view = None):
 # 
 # 
 def resolvequery(queryname, query = None):
+    etime = logger.enter("resolvequery")
 
     if not queryname and not query:
         # return Response(
@@ -192,6 +280,7 @@ def resolvequery(queryname, query = None):
             # queryfile = open("/data/" + str(queryname) + "." + "graphql", "r")
             queryfile = open("/data/" + str(queryname), "r")
             query = queryfile.read()
+            logger.exit("resolvequery", etime)
             return query
         except Exception as e:
             # return Response(
@@ -242,12 +331,14 @@ def resolvequery(queryname, query = None):
         # )
         raise GFSError("Unable to read query, please pass a valid query")
 
+    logger.exit("resolvequery", etime)
     return query
 
 # 
 # 
 # 
 def resolvetemplate(templatename, template = None, format = "mustache", mime = 'application/text'):
+    etime = logger.enter("resolvetemplate")
 
     if not templatename and not template:
         # return Response(
@@ -259,13 +350,14 @@ def resolvetemplate(templatename, template = None, format = "mustache", mime = '
     if template and format:
        return (template, format, mime) 
 
-        # File
+    # File
     if templatename:
         try:
             # templatefile = open("/data/templates/" + str(templatename) + "." + format, "r")
             # templatefile = open("/data/" + str(templatename) + "." + format, "r")
             templatefile = open("/data/" + str(templatename), "r")
             template = templatefile.read()
+            logger.exit("resolvetemplate", etime)
             return (template, format)
         except Exception as e:
             # return Response(
@@ -323,12 +415,14 @@ def resolvetemplate(templatename, template = None, format = "mustache", mime = '
         # )
         raise GFSError("Unable to read template, please pass a valid template, format is set to " + str(format))
 
+    logger.exit("resolvetemplate", etime)
     return (template, format, mime)
 
 # 
 # 
 # 
 def resolveview(viewname):
+    etime = logger.enter("resolveview")
 
     query = None
     template = None
@@ -384,12 +478,14 @@ def resolveview(viewname):
             # )
             raise
 
+    logger.exit("resolveview", etime)
     return (query, template, partials, mime)
 
 # 
 # 
 # 
 def doquery(query, params = {}):
+    etime = logger.enter("doquery")
 
     data = {}
     try:
@@ -441,6 +537,7 @@ def doquery(query, params = {}):
     # serial ( 11 * 60 + 25 ) / 1440 * 99 = 47
     context["incr"] = str(int((((int(hour) * 60) + int(min)) / 1440) * 90))
 
+    logger.exit("doquery", etime)
     # return data
     return context
 
@@ -448,6 +545,7 @@ def doquery(query, params = {}):
 # 
 # 
 def dorender(template, format = "mustache", data = {}):
+    etime = logger.enter("dorender")
 
     if format not in ["mustache", "handlebars", "jinja"]:
         # return Response(
@@ -462,28 +560,37 @@ def dorender(template, format = "mustache", data = {}):
             template
         )
         # return Response(
-        return t1.render(
+        # return 
+        ret = t1.render(
             data
         )
         # , 
         #     mimetype='application/text'
         # )
 
+        logger.exit("dorender", etime)
+        return ret
+
     elif format == "handlebars":
         from pybars import Compiler
         compiler = Compiler()
         template = compiler.compile(template)
         # return Response(
-        return template(data)
+        # return 
+        ret = template(data)
         # , 
         #     mimetype='application/text'
         # )
+
+        logger.exit("dorender", etime)
+        return ret
 
     else:
 
         import pystache
         # return Response(
-        return pystache.render(
+        # return 
+        ret = pystache.render(
             template,
             data, 
         )
@@ -507,6 +614,9 @@ def dorender(template, format = "mustache", data = {}):
         # # , 
         # #     mimetype='application/text'
         # # )
+
+        logger.exit("dorender", etime)
+        return ret
 
 # 
 # 
