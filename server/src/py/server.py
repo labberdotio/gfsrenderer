@@ -103,11 +103,13 @@ def render():
     import simplejson as json
     try:
         # (templatename, template = None, format = "mustache"):
-        (template, format) = resolvetemplate(
+        (template, format, mime) = resolvetemplate(
             templatename = request.args.get("template"), 
             template = None, 
             format = request.args.get("format", "mustache")
         )
+        if not mime:
+            mime = 'application/text'
         return Response(
             dorender(
                 template = template, 
@@ -119,7 +121,7 @@ def render():
                     params = request.args
                 ), 
             ), 
-            mimetype='application/text'
+            mimetype=mime # 'application/text'
         )
     except Exception as e:
         return Response(
@@ -132,14 +134,19 @@ def view():
     from flask import request
     import simplejson as json
     try:
-        (query, template, format) = resolveview(
+        (query, template, format, viewmime) = resolveview(
             viewname = request.args.get("view")
         )
-        (template, format) = resolvetemplate(
+        if not viewmime:
+            viewmime = 'application/text'
+        (template, format, templatemime) = resolvetemplate(
             templatename = template["name"], 
             template = template["template"], 
             format = template["format"], 
+            # mime = template["mime"], 
         )
+        if not templatemime:
+            templatemime = 'application/text'
         return Response(
             dorender(
                 template = template, 
@@ -152,7 +159,7 @@ def view():
                     params = request.args
                 ), 
             ), 
-            mimetype='application/text'
+            mimetype=viewmime # 'application/text'
         )
     except Exception as e:
         return Response(
@@ -234,7 +241,7 @@ def resolvequery(queryname, query = None):
 # 
 # 
 # 
-def resolvetemplate(templatename, template = None, format = "mustache"):
+def resolvetemplate(templatename, template = None, format = "mustache", mime = 'application/text'):
 
     if not templatename and not template:
         # return Response(
@@ -269,7 +276,8 @@ def resolvetemplate(templatename, template = None, format = "mustache"):
                     ) {
                         name, 
                         template, 
-                        format
+                        format, 
+                        mime
                     }
                 }
             """ % (
@@ -286,9 +294,11 @@ def resolvetemplate(templatename, template = None, format = "mustache"):
                 templatedata["data"]["Templates"] and len(templatedata["data"]["Templates"]) > 0 :
                 template = templatedata["data"]["Templates"][0]["template"]
                 format = templatedata["data"]["Templates"][0]["format"]
+                mime = templatedata["data"]["Templates"][0]["mime"] 
                 if not format:
                     format = "mustache"
-
+                if not mime:
+                    mime = 'application/text'
         except Exception as e:
             # return Response(
             #     # "Query error: " + str(e.response.json()),
@@ -304,7 +314,7 @@ def resolvetemplate(templatename, template = None, format = "mustache"):
         # )
         raise GFSError("Unable to read template, please pass a valid template, format is set to " + str(format))
 
-    return (template, format)
+    return (template, format, mime)
 
 # 
 # 
@@ -314,6 +324,7 @@ def resolveview(viewname):
     query = None
     template = None
     partials = []
+    mime = 'application/text'
 
     if viewname:
         try:
@@ -323,6 +334,7 @@ def resolveview(viewname):
                         name: "%s"
                     ) {
                         name,
+                        mime,
                         query {
                             name,
                             query
@@ -347,9 +359,13 @@ def resolveview(viewname):
                 "Views" in querydata["data"] and \
                 querydata["data"]["Views"] and len(querydata["data"]["Views"]) > 0 :
                 view = querydata["data"]["Views"][0]
+                mime = querydata["data"]["Views"][0]["mime"]
                 query = querydata["data"]["Views"][0]["query"]
                 template = querydata["data"]["Views"][0]["template"]
                 partials = [] # querydata["data"]["Views"][0]["partials"]
+
+            if not mime:
+                mime = 'application/text'
 
         except Exception as e:
             # return Response(
@@ -359,7 +375,7 @@ def resolveview(viewname):
             # )
             raise
 
-    return (query, template, partials)
+    return (query, template, partials, mime)
 
 # 
 # 
