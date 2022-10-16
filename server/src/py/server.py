@@ -176,7 +176,8 @@ def resolvequery(queryname, query = None):
     if queryname:
         try:
             # queryfile = open("/data/queries/" + str(queryname) + "." + "graphql", "r")
-            queryfile = open("/data/" + str(queryname) + "." + "graphql", "r")
+            # queryfile = open("/data/" + str(queryname) + "." + "graphql", "r")
+            queryfile = open("/data/" + str(queryname), "r")
             query = queryfile.read()
             return query
         except Exception as e:
@@ -185,13 +186,14 @@ def resolvequery(queryname, query = None):
             #     str(e),
             #     status=400,
             # )
-            raise
+            # raise
+            pass
 
     if queryname:
         try:
             queryquery = """
                 query queryquery {
-                    queries(
+                    Querys(
                         name: "%s"
                     ) {
                         name, 
@@ -208,9 +210,9 @@ def resolvequery(queryname, query = None):
             )
             if querydata and \
                 "data" in querydata and \
-                "queries" in querydata["data"] and \
-                querydata["data"]["queries"] and len(querydata["data"]["queries"]) > 0 :
-                query = querydata["data"]["queries"][0]["query"]
+                "Querys" in querydata["data"] and \
+                querydata["data"]["Querys"] and len(querydata["data"]["Querys"]) > 0 :
+                query = querydata["data"]["Querys"][0]["query"]
 
         except Exception as e:
             # return Response(
@@ -245,7 +247,8 @@ def resolvetemplate(templatename, template = None, format = "mustache"):
     if templatename:
         try:
             # templatefile = open("/data/templates/" + str(templatename) + "." + format, "r")
-            templatefile = open("/data/" + str(templatename) + "." + format, "r")
+            # templatefile = open("/data/" + str(templatename) + "." + format, "r")
+            templatefile = open("/data/" + str(templatename), "r")
             template = templatefile.read()
             return (template, format)
         except Exception as e:
@@ -254,13 +257,14 @@ def resolvetemplate(templatename, template = None, format = "mustache"):
             #     str(e),
             #     status=400,
             # )
-            raise
+            # raise
+            pass
 
     if templatename:
         try:
             templatequery = """
                 query templatequery {
-                    templates(
+                    Templates(
                         name: "%s"
                     ) {
                         name, 
@@ -278,10 +282,10 @@ def resolvetemplate(templatename, template = None, format = "mustache"):
             )
             if templatedata and \
                 "data" in templatedata and \
-                "templates" in templatedata["data"] and \
-                templatedata["data"]["templates"] and len(templatedata["data"]["templates"]) > 0 :
-                template = templatedata["data"]["templates"][0]["template"]
-                format = templatedata["data"]["templates"][0]["format"]
+                "Templates" in templatedata["data"] and \
+                templatedata["data"]["Templates"] and len(templatedata["data"]["Templates"]) > 0 :
+                template = templatedata["data"]["Templates"][0]["template"]
+                format = templatedata["data"]["Templates"][0]["format"]
                 if not format:
                     format = "mustache"
 
@@ -292,6 +296,13 @@ def resolvetemplate(templatename, template = None, format = "mustache"):
             #     status=400,
             # )
             raise
+
+    if not template:
+        # return Response(
+        #     "Unable to read template, please pass a valid template, format is set to " + str(format),
+        #     status=400,
+        # )
+        raise GFSError("Unable to read template, please pass a valid template, format is set to " + str(format))
 
     return (template, format)
 
@@ -308,7 +319,7 @@ def resolveview(viewname):
         try:
             viewquery = """
                 query viewquery {
-                    views(
+                    Views(
                         name: "%s"
                     ) {
                         name,
@@ -317,11 +328,6 @@ def resolveview(viewname):
                             query
                         },
                         template {
-                            name,
-                            template,
-                            format
-                        }
-                        partials {
                             name,
                             template,
                             format
@@ -338,12 +344,12 @@ def resolveview(viewname):
             )
             if querydata and \
                 "data" in querydata and \
-                "views" in querydata["data"] and \
-                querydata["data"]["views"] and len(querydata["data"]["views"]) > 0 :
-                view = querydata["data"]["views"][0]
-                query = querydata["data"]["views"][0]["query"]
-                template = querydata["data"]["views"][0]["template"]
-                partials = querydata["data"]["views"][0]["partials"]
+                "Views" in querydata["data"] and \
+                querydata["data"]["Views"] and len(querydata["data"]["Views"]) > 0 :
+                view = querydata["data"]["Views"][0]
+                query = querydata["data"]["Views"][0]["query"]
+                template = querydata["data"]["Views"][0]["template"]
+                partials = [] # querydata["data"]["Views"][0]["partials"]
 
         except Exception as e:
             # return Response(
