@@ -1,3 +1,8 @@
+# 
+# Copyright (c) 2020, 2021, 2022, John Grundback
+# All rights reserved.
+# 
+
 
 import logging
 
@@ -15,10 +20,7 @@ from python_graphql_client import GraphqlClient
 class GFSGQLError(Exception):
 
     def __init__(self, error):
-        self.error = error
-
-    def __str__(self):
-        return str(self.error)
+        pass
 
 
 
@@ -37,14 +39,21 @@ class GFSGQL():
         gfs_username,
         gfs_password,
 
+        gfs_ns,
+
         **kwargs):
+
+        if not gfs_ns:
+            raise GremlinFSAPIError(
+                "No namespace defined"
+            )
 
         self.gfs_host = gfs_host
         self.gfs_port = gfs_port
         self.gfs_username = gfs_username
         self.gfs_password = gfs_password
 
-        self.api_namespace = "gfs1"
+        self.api_namespace = gfs_ns
 
         self.gfs_gqlurl = "http://" + self.gfs_host + ":" + self.gfs_port + "/server/" + self.api_namespace + "/" + "graphql"
 
@@ -487,39 +496,3 @@ class GFSGQL():
     def delete(self, resource, arguments = {}, variables = {}):
         return self.gqldelete(resource, arguments, variables)
 
-
-# 
-# Main
-# 
-# if __name__ == '__main__':
-# 
-#     gfs_host = "localhost"
-#     gfs_port = "5000"
-#     gfs_username = None
-#     gfs_password = None
-# 
-#     gqlClient = GFSGQL(
-#         gfs_host = gfs_host,
-#         gfs_port = gfs_port,
-#         gfs_username = gfs_username,
-#         gfs_password = gfs_password,
-#     )
-# 
-#     gqlClient.gqlexec(
-#         """
-#             mutation updateIp($id:String!, $name:String, $address:String, ) {
-#                 updateIp(id:$id, name:$name, address:$address, ) {
-#                     instance {
-#                         id, name, address,
-#                     },
-#                     ok
-#                 }
-#             }
-#         """,
-#         {
-#             "id": "5202",
-#             "name": "myname",
-#             "address": "myaddress"
-#         }
-#     )
-# 

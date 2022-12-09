@@ -28,7 +28,7 @@ socketio = SocketIO(app, async_mode=async_mode)
 listen_addr = os.environ.get("LISTEN_ADDR", "0.0.0.0")
 listen_port = os.environ.get("LISTEN_PORT", "5000")
 
-# gfs_ns = os.environ.get("GFS_NAMESPACE", "gfs1")
+gfs_ns = os.environ.get("GFS_NAMESPACE", "gfs1")
 gfs_host = os.environ.get("GFS_HOST", "gfsapi")
 gfs_port = os.environ.get("GFS_PORT", "5000")
 gfs_username = os.environ.get("GFS_USERNAME", "root")
@@ -50,10 +50,14 @@ state = {
 }
 
 gqlClient = GFSGQL(
+
     gfs_host = gfs_host,
     gfs_port = gfs_port,
     gfs_username = gfs_username,
     gfs_password = gfs_password,
+
+    gfs_ns = str(gfs_ns)
+
 )
 
 # 
