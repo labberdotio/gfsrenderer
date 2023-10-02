@@ -1,5 +1,5 @@
 # 
-# Copyright (c) 2020, 2021, 2022, John Grundback
+# Copyright (c) 2020, 2021, 2022, 2023, John Grundback
 # All rights reserved.
 # 
 
@@ -44,7 +44,7 @@ class GFSGQL():
         **kwargs):
 
         if not gfs_ns:
-            raise GremlinFSAPIError(
+            raise GFSGQLError(
                 "No namespace defined"
             )
 
@@ -144,8 +144,14 @@ class GFSGQL():
             )
 
         except Exception as e:
+            # See if we can find a proper GraphQL error message
+            try:
+                reponse_json = e.response.json()
+            except ValueError:
+                # If not, bail and bubble
+                raise e
             raise GFSGQLError("GQL GraphQL error " + str(
-                e.response.json())
+                reponse_json)
             )
 
         self.logger.debug("GQL query result")
@@ -181,7 +187,11 @@ class GFSGQL():
         if arguments:
             query = """
                 query %s(%s) {
-                    %s(%s) {
+                    %s(
+                        matching: {
+                            %s
+                        }
+                    ) {
                         %s
                     }
                 }
@@ -207,8 +217,14 @@ class GFSGQL():
             )
 
         except Exception as e:
+            # See if we can find a proper GraphQL error message
+            try:
+                reponse_json = e.response.json()
+            except ValueError:
+                # If not, bail and bubble
+                raise e
             raise GFSGQLError("GQL GraphQL error " + str(
-                e.response.json())
+                reponse_json)
             )
 
         self.logger.debug("GQL query result")
@@ -261,8 +277,14 @@ class GFSGQL():
             )
 
         except Exception as e:
+            # See if we can find a proper GraphQL error message
+            try:
+                reponse_json = e.response.json()
+            except ValueError:
+                # If not, bail and bubble
+                raise e
             raise GFSGQLError("GQL GraphQL error " + str(
-                e.response.json())
+                reponse_json)
             )
 
         self.logger.debug("GQL query result")
@@ -292,7 +314,11 @@ class GFSGQL():
 
         query="""
             mutation %s(%s) {
-                %s(%s) {
+                %s(
+                    instance: {
+                        %s
+                    }
+                ) {
                     instance {
                         %s
                     },
@@ -322,8 +348,14 @@ class GFSGQL():
             )
 
         except Exception as e:
+            # See if we can find a proper GraphQL error message
+            try:
+                reponse_json = e.response.json()
+            except ValueError:
+                # If not, bail and bubble
+                raise e
             raise GFSGQLError("GQL GraphQL error " + str(
-                e.response.json())
+                reponse_json)
             )
 
         self.logger.debug("GQL mutation result")
@@ -360,7 +392,11 @@ class GFSGQL():
 
         query="""
             mutation %s(%s) {
-                %s(%s) {
+                %s(
+                    instance: {
+                        %s 
+                    }
+                ) {
                     instance {
                         %s
                     },
@@ -389,8 +425,14 @@ class GFSGQL():
             )
 
         except Exception as e:
+            # See if we can find a proper GraphQL error message
+            try:
+                reponse_json = e.response.json()
+            except ValueError:
+                # If not, bail and bubble
+                raise e
             raise GFSGQLError("GQL GraphQL error " + str(
-                e.response.json())
+                reponse_json)
             )
 
         self.logger.debug("GQL mutation result")
@@ -450,8 +492,14 @@ class GFSGQL():
             )
 
         except Exception as e:
+            # See if we can find a proper GraphQL error message
+            try:
+                reponse_json = e.response.json()
+            except ValueError:
+                # If not, bail and bubble
+                raise e
             raise GFSGQLError("GQL GraphQL error " + str(
-                e.response.json())
+                reponse_json)
             )
 
         self.logger.debug("GQL mutation result")
@@ -495,4 +543,3 @@ class GFSGQL():
 
     def delete(self, resource, arguments = {}, variables = {}):
         return self.gqldelete(resource, arguments, variables)
-
