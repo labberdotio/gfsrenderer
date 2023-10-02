@@ -17,4 +17,46 @@ Flask-SocketIO = "*"
 Werkzeug = "==0.14.1"
 
 [requires]
-python_version = "3"
+# 
+# I am on a roll testing the API on many different platforms, including
+#
+# - Red Hat Enterprise Linux 8.4, python 3.6 (3.6.8)
+# - CentOS Linux release 7.9.2009 (Core), python 3.6 (3.6.8)
+# - Ubuntu 18.04.6 LTS, python 3.6 (3.6.9)
+# - MacOS 11.6, python 3.6 (3.6.12)
+# - MacOS 10.13.6, python 3.6 (3.6.13)
+# - MacOS 11.6.2, python 3.6 (3.6.15)
+# 
+# - Red Hat Enterprise Linux 8.4, python 3.8 (3.8.6)
+# - MacOS 11.6, python 3.8 (3.8.9)
+# - Ubuntu 20.04.3 LTS, python 3.8 (3.8.10)
+# - MacOS 11.6.2, python 3.8 (3.8.12)
+# 
+# - Red Hat Enterprise Linux 8.4, python 3.9 (3.9.2), fails tho with a greenlet build failure
+# - MacOS 11.6, python 3.9 (3.9.4)
+# - MacOS 10.13.6, python 3.9 (3.9.4)
+# - MacOS 11.6.2, python 3.9 (3.9.9)
+# - Slackware 15 RC2, python python 3.9 (3.9.9)
+# - Slackware 15 RC3, python python 3.9 (3.9.10)
+# - Debian 11, python 3.9 (3.9.2)
+#
+# I found that on Red Hat Enterprise Linux 8.4, when installing and testing with python 3.9 
+# (3.9.2 and 3.9.6 to be precise), I consistently see a greenlet build failure resulting with
+# the pip requirements fail to install properly and the test suite fails to run. I think I 
+# will have explicitly specify python 3.6 here and make sure it is available on all test 
+# platforms. Regarding the above, I have since tested 3.9 just fine on MacOS 11.6 and Slackware 15.
+# 
+# Now that python 3.6 is EOL I am upgrading the version of python to version 3.8.
+# 
+# Here are the various versions of python the API has been tested with
+# - python 2.7, original version API was developed with on MacOS
+# - python 3.4, python3 version on MacOS 10.13.6 and CentOS 7
+# - python 3.6, python3 version on MacOS, Ubuntu 18.04, and Alpine 3.9
+# - python 3.8, python3 version on MacOS, Ubuntu 20.04, and Alpine 3.12
+# - python 3.9, python3 version on Slackware 15 RC2/3
+# - python 3.9, python3 version on Debian 11
+# 
+# python_version = "3"
+# python_version = "3.6"
+# python_version = "3.8"
+python_version = "3.9"
