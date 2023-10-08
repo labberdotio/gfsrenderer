@@ -1,7 +1,11 @@
 
 import os
-import sys
+import logging
+from logging import getLevelName
+# logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.DEBUG)
 
+import sys
 import asyncio
 
 from flask import Flask
@@ -15,6 +19,24 @@ from flask_socketio import disconnect
 
 # from python_graphql_client import GraphqlClient
 from gfsgql import GFSGQL
+
+
+
+# CRITICAL: 'CRITICAL',
+# ERROR: 'ERROR',
+# WARNING: 'WARNING',
+# INFO: 'INFO',
+# DEBUG: 'DEBUG',
+# NOTSET: 'NOTSET',
+log_level = os.environ.get("LOG_LEVEL", "INFO")
+if not log_level:
+    log_level = "INFO"
+
+print( log_level )
+print( getLevelName(log_level) )
+logging.basicConfig(level=getLevelName(log_level))
+
+
 
 # Set this variable to "threading", "eventlet" or "gevent" to test the
 # different async modes, or leave it set to None for the application to choose
