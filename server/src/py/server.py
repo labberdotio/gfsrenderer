@@ -103,12 +103,22 @@ class GFSError(Exception):
 def query():
     from flask import request
     import simplejson as json
+
+    query = request.args.get("query")
+    if not query:
+        return Response(
+            "No query given via dedicated query string param, try .../query?query=templatename",
+            status=400,
+        )
+
+    logging.debug(" => query: query: " + str(query))
+
     try:
         return Response(
             json.dumps(
                 doquery(
                     resolvequery(
-                        queryname = request.args.get("query")
+                        queryname = query # request.args.get("query")
                     ), 
                     params = request.args
                 ), 
@@ -131,23 +141,55 @@ def query():
 def render():
     from flask import request
     import simplejson as json
+
+    template = request.args.get("template")
+    if not template:
+        return Response(
+            "No template given via dedicated query string param, try .../render?template=templatename",
+            status=400,
+        )
+
+    format = request.args.get("format", "mustache")
+    if not format:
+        return Response(
+            "No format given via dedicated query string param, try .../render?format=templateformat",
+            status=400,
+        )
+
+    query = request.args.get("query")
+    if not query:
+        return Response(
+            "No query given via dedicated query string param, try .../render?query=queryname",
+            status=400,
+        )
+
+    logging.debug(" => render: template: " + str(template) + ", format: " + str(format) + ", query: " + str(query))
+
     try:
         # (templatename, template = None, format = "mustache"):
         (template, format, mime) = resolvetemplate(
-            templatename = request.args.get("template"), 
+            templatename = template, # request.args.get("template"), 
             template = None, 
-            format = request.args.get("format", "mustache")
+            format = format, # request.args.get("format", "mustache")
         )
+        logging.debug(" => render: resolve template: " + str(template) + ", format: " + str(format) + ", mime: " + str(mime))
         if not mime:
             mime = 'application/text'
+        query = resolvequery(
+            queryname = query # request.args.get("query")
+        )
+        logging.debug(" => render: resolve query: " + str(query))
+        logging.debug(" => render: params: ")
+        logging.debug(request.args)
         return Response(
             dorender(
                 template = template, 
                 format = format, 
                 data = doquery(
-                    query = resolvequery(
-                        queryname = request.args.get("query")
-                    ), 
+                    # query = resolvequery(
+                    #     queryname = query # request.args.get("query")
+                    # ), 
+                    query = query, 
                     params = request.args
                 ), 
             ), 
@@ -162,13 +204,25 @@ def render():
             status=400,
         )
 
+
+
 @app.route('/view', methods=['GET'])
 @app.route('/view/<path:view>', methods=['GET'])
 def view(view = None):
     from flask import request
     import simplejson as json
+
     if not view:
         view = request.args.get("view")
+
+    if not view:
+        return Response(
+            "No view given via dedicated query string param, try .../view?view=viewname",
+            status=400,
+        )
+
+    logging.debug(" => view: view: " + str(view))
+
     try:
         (query, template, format, viewmime) = resolveview(
             viewname = view # request.args.get("view")
@@ -210,6 +264,9 @@ def view(view = None):
 # 
 # 
 def resolvequery(queryname, query = None):
+
+    logging.debug(" => resolvequery: queryname: " + str(queryname))
+    logging.debug(" => resolvequery: query: " + str(query))
 
     if not queryname and not query:
         # return Response(
@@ -262,7 +319,8 @@ def resolvequery(queryname, query = None):
                 "Querys" in querydata["data"] and \
                 querydata["data"]["Querys"] and len(querydata["data"]["Querys"]) > 0 :
                 query = querydata["data"]["Querys"][0]["query"]
-
+                if not query:
+                    raise GFSError("Found matching query with name " + str(queryname) + ", however this query seems empty.")
         except Exception as e:
             # return Response(
             #     # "Query error: " + str(e.response.json()),
@@ -284,6 +342,11 @@ def resolvequery(queryname, query = None):
 # 
 # 
 def resolvetemplate(templatename, template = None, format = "mustache", mime = 'application/text'):
+
+    logging.debug(" => resolvetemplate: templatename: " + str(templatename))
+    logging.debug(" => resolvetemplate: template: " + str(template))
+    logging.debug(" => resolvetemplate: format: " + str(format))
+    logging.debug(" => resolvetemplate: mime: " + str(mime))
 
     if not templatename and not template:
         # return Response(
@@ -339,7 +402,9 @@ def resolvetemplate(templatename, template = None, format = "mustache", mime = '
                 templatedata["data"]["Templates"] and len(templatedata["data"]["Templates"]) > 0 :
                 template = templatedata["data"]["Templates"][0]["template"]
                 format = templatedata["data"]["Templates"][0]["format"]
-                mime = templatedata["data"]["Templates"][0]["mime"] 
+                mime = templatedata["data"]["Templates"][0]["mime"]
+                if not template:
+                    raise GFSError("Found matching template with name " + str(templatename) + ", however this template seems empty.")
                 if not format:
                     format = "mustache"
                 if not mime:
@@ -365,6 +430,8 @@ def resolvetemplate(templatename, template = None, format = "mustache", mime = '
 # 
 # 
 def resolveview(viewname):
+
+    logging.debug(" => resolveview: viewname: " + str(viewname))
 
     query = None
     template = None
@@ -408,7 +475,10 @@ def resolveview(viewname):
                 query = querydata["data"]["Views"][0]["query"]
                 template = querydata["data"]["Views"][0]["template"]
                 partials = [] # querydata["data"]["Views"][0]["partials"]
-
+                if not query:
+                    raise GFSError("Found matching query for view " + str(viewname) + ", however this query seems empty.")
+                if not template:
+                    raise GFSError("Found matching template for view " + str(viewname) + ", however this template seems empty.")
             if not mime:
                 mime = 'application/text'
 
