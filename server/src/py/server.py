@@ -300,7 +300,9 @@ def resolvequery(queryname, query = None):
             queryquery = """
                 query queryquery {
                     Querys(
-                        name: "%s"
+                        matching: {
+                            name: "%s"
+                        }
                     ) {
                         name, 
                         query
@@ -380,7 +382,9 @@ def resolvetemplate(templatename, template = None, format = "mustache", mime = '
             templatequery = """
                 query templatequery {
                     Templates(
-                        name: "%s"
+                        matching: {
+                            name: "%s"
+                        }
                     ) {
                         name, 
                         template, 
@@ -443,7 +447,9 @@ def resolveview(viewname):
             viewquery = """
                 query viewquery {
                     Views(
-                        name: "%s"
+                        matching: {
+                            name: "%s"
+                        }
                     ) {
                         name,
                         mime,
