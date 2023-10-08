@@ -7,6 +7,7 @@ from logging import getLevelName
 
 import sys
 import asyncio
+import traceback
 
 from flask import Flask
 from flask import render_template
@@ -117,6 +118,9 @@ def query():
             mimetype='application/json'
         )
     except Exception as e:
+        logging.error(" => query: error: " + str(e))
+        print(e)
+        traceback.print_exc()
         return Response(
             str(e),
             status=400,
@@ -150,6 +154,9 @@ def render():
             mimetype=mime # 'application/text'
         )
     except Exception as e:
+        logging.error(" => render: error: " + str(e))
+        print(e)
+        traceback.print_exc()
         return Response(
             str(e),
             status=400,
@@ -191,6 +198,9 @@ def view(view = None):
             mimetype=viewmime # 'application/text'
         )
     except Exception as e:
+        logging.error(" => view: error: " + str(e))
+        print(e)
+        traceback.print_exc()
         return Response(
             str(e),
             status=400,
