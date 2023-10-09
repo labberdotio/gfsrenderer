@@ -98,6 +98,31 @@ class GFSError(Exception):
 # 
 # 
 
+@app.route('/showquery', methods=['GET'])
+def showquery():
+    from flask import request
+    import simplejson as json
+
+    query = request.args.get("query")
+    if not query:
+        return Response(
+            "No query given via dedicated query string param, try .../showquery?query=templatename",
+            status=400,
+        )
+
+    try:
+        return Response(
+            resolvequery(
+                queryname = query # request.args.get("query")
+            ),
+            mimetype='application/text'
+        )
+    except Exception as e:
+        return Response(
+            str(e),
+            status=400,
+        )
+
 @app.route('/query', methods=['GET', 'POST'])
 def query():
     from flask import request
