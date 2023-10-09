@@ -98,8 +98,7 @@ class GFSError(Exception):
 # 
 # 
 
-# @app.route('/query', methods=['GET', 'POST'])
-@app.route('/query', methods=['GET'])
+@app.route('/query', methods=['GET', 'POST'])
 def query():
     from flask import request
     import simplejson as json
@@ -136,8 +135,7 @@ def query():
             status=400,
         )
 
-# @app.route('/render', methods=['GET', 'POST'])
-@app.route('/render', methods=['GET'])
+@app.route('/render', methods=['GET', 'POST'])
 def render():
     from flask import request
     import simplejson as json
@@ -206,8 +204,8 @@ def render():
 
 
 
-@app.route('/view', methods=['GET'])
-@app.route('/view/<path:view>', methods=['GET'])
+@app.route('/view', methods=['GET', 'POST'])
+@app.route('/view/<path:view>', methods=['GET', 'POST'])
 def view(view = None):
     from flask import request
     import simplejson as json
