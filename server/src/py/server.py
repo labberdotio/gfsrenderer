@@ -123,6 +123,42 @@ def showquery():
             status=400,
         )
 
+@app.route('/showtemplate', methods=['GET'])
+def showtemplate():
+    from flask import request
+    import simplejson as json
+
+    template = request.args.get("template")
+    if not template:
+        return Response(
+            "No template given via dedicated query string param, try .../showtemplate?template=templatename",
+            status=400,
+        )
+
+    format = request.args.get("format", "mustache")
+    if not format:
+        return Response(
+            "No format given via dedicated query string param, try .../showtemplate?format=templateformat",
+            status=400,
+        )
+
+    try:
+        # (templatename, template = None, format = "mustache"):
+        (template, format, mime) = resolvetemplate(
+            templatename = template, # request.args.get("template"), 
+            template = None, 
+            format = format # request.args.get("format", "mustache")
+        )
+        return Response(
+            template, 
+            mimetype='application/text'
+        )
+    except Exception as e:
+        return Response(
+            str(e),
+            status=400,
+        )
+
 @app.route('/query', methods=['GET', 'POST'])
 def query():
     from flask import request
